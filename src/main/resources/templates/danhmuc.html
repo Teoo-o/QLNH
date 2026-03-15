@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"> <head>
+    <meta charset="UTF-8">
+    <title>Quản lý Danh Mục - Nhà Hàng</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 50%; margin-top: 20px; }
+        th, td { border: 1px solid #dddddd; padding: 10px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">QUẢN LÝ NHÀ HÀNG</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item"><a class="nav-link" href="/danhmuc">Danh Mục</a></li>
+                <li class="nav-item"><a class="nav-link" href="/monan">Món Ăn</a></li>
+                <li class="nav-item"><a class="nav-link" href="/banan">Bàn Ăn</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<h1>Danh sách Danh mục Món ăn</h1>
+    <a href="/danhmuc/them">
+        <button style="margin-bottom: 15px; background-color: #008CBA; color: white; padding: 10px; border: none; cursor: pointer;">
+            + Thêm Danh Mục
+        </button>
+    </a>
+<table>
+    <thead>
+    <tr>
+        <th>Mã Danh Mục</th>
+        <th>Tên Danh Mục</th>
+        <th>Hành động</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="dm : ${dsDanhMuc}">
+        <td th:text="${dm.maDM}">1</td>
+        <td th:text="${dm.tenDM}">Tên nháp</td>
+
+        <td>
+            <a th:href="@{/danhmuc/sua/{id}(id=${dm.maDM})}" style="color: blue; text-decoration: none;">✏️ Sửa</a>
+            |
+            <a th:href="@{/danhmuc/xoa/{id}(id=${dm.maDM})}" onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục này không?');" style="color: red; text-decoration: none;">🗑️ Xóa</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>

@@ -1,0 +1,118 @@
+CREATE NhaHang;
+USE NhaHang;
+
+-- ==========================================
+-- 1. TẠO CÁC BẢNG ĐỘC LẬP (KHÔNG CÓ KHÓA NGOẠI)
+-- ==========================================
+
+CREATE TABLE KHACH_HANG (
+    MaKH INT IDENTITY(1,1) PRIMARY KEY,
+    TenKH NVARCHAR(255) NOT NULL,
+    SDT VARCHAR(20) NOT NULL
+);
+
+CREATE TABLE BAN_AN (
+    MaBan INT IDENTITY(1,1) PRIMARY KEY,
+    KhuVuc NVARCHAR(100),
+    SoGhe INT
+);
+
+CREATE TABLE DOI_TAC_GIAO_HANG (
+    MaDT INT IDENTITY(1,1) PRIMARY KEY,
+    TenDT NVARCHAR(255) NOT NULL,
+    ChietKhau FLOAT
+);
+
+CREATE TABLE NHAN_VIEN (
+    MaNV INT IDENTITY(1,1) PRIMARY KEY,
+    TenNV NVARCHAR(255) NOT NULL,
+    ChucVu NVARCHAR(100)
+);
+
+CREATE TABLE DANH_MUC (
+    MaDM INT IDENTITY(1,1) PRIMARY KEY,
+    TenDM NVARCHAR(255) NOT NULL
+);
+
+CREATE TABLE KHUYEN_MAI (
+    MaKM INT IDENTITY(1,1) PRIMARY KEY,
+    TenKM NVARCHAR(255) NOT NULL,
+    NgayBD DATETIME,
+    NgayKT DATETIME,
+    PhanTramGiam FLOAT
+);
+
+CREATE TABLE NGUYEN_LIEU (
+    MaNL INT IDENTITY(1,1) PRIMARY KEY,
+    TenNL NVARCHAR(255) NOT NULL,
+    DonViTinh NVARCHAR(50),
+    SL FLOAT
+);
+
+-- ==========================================
+-- 2. TẠO CÁC BẢNG PHỤ THUỘC (CÓ KHÓA NGOẠI)
+-- ==========================================
+
+CREATE TABLE MON_AN (
+    MaMon INT IDENTITY(1,1) PRIMARY KEY,
+    TenMon NVARCHAR(255) NOT NULL,
+    MaDM INT,
+    DonGia DECIMAL(15, 2),
+    FOREIGN KEY (MaDM) REFERENCES DANH_MUC(MaDM)
+);
+
+CREATE TABLE PHIEU_DAT_BAN (
+    MaPhieu INT IDENTITY(1,1) PRIMARY KEY,
+    ThoiGianDen DATETIME,
+    TrangThai NVARCHAR(50),
+    SoNguoi INT,
+    MaBan INT,
+    MaKH INT,
+    FOREIGN KEY (MaBan) REFERENCES BAN_AN(MaBan),
+    FOREIGN KEY (MaKH) REFERENCES KHACH_HANG(MaKH)
+);
+
+CREATE TABLE HOA_DON (
+    MaHD INT IDENTITY(1,1) PRIMARY KEY,
+    LoaiHD NVARCHAR(50), 
+    NgayTao DATETIME DEFAULT GETDATE(), 
+    SoTienGiam DECIMAL(15, 2),
+    PhiGiaoHang DECIMAL(15, 2),
+    MaBan INT,
+    MaKM INT,
+    MaPhieu INT,
+    MaNV INT,
+    MaDT INT,
+    MaKH INT,
+    FOREIGN KEY (MaBan) REFERENCES BAN_AN(MaBan),
+    FOREIGN KEY (MaKM) REFERENCES KHUYEN_MAI(MaKM),
+    FOREIGN KEY (MaPhieu) REFERENCES PHIEU_DAT_BAN(MaPhieu),
+    FOREIGN KEY (MaNV) REFERENCES NHAN_VIEN(MaNV),
+    FOREIGN KEY (MaDT) REFERENCES DOI_TAC_GIAO_HANG(MaDT),
+    FOREIGN KEY (MaKH) REFERENCES KHACH_HANG(MaKH)
+);
+
+-- ==========================================
+-- 3. TẠO CÁC BẢNG TRUNG GIAN (QUAN HỆ NHIỀU - NHIỀU)
+-- ==========================================
+
+-- Chi tiết Hóa đơn (Hóa đơn - Món ăn)
+CREATE TABLE HD_MA (
+    MaHD INT,
+    MaMon INT,
+    SL INT,
+    DonGiaBan DECIMAL(15, 2),
+    PRIMARY KEY (MaHD, MaMon),
+    FOREIGN KEY (MaHD) REFERENCES HOA_DON(MaHD),
+    FOREIGN KEY (MaMon) REFERENCES MON_AN(MaMon)
+);
+
+-- Định lượng nguyên liệu (Món ăn - Nguyên liệu)
+CREATE TABLE MA_NL (
+    MaMon INT,
+    MaNL INT,
+    DinhLuong FLOAT,
+    PRIMARY KEY (MaMon, MaNL),
+    FOREIGN KEY (MaMon) REFERENCES MON_AN(MaMon),
+    FOREIGN KEY (MaNL) REFERENCES NGUYEN_LIEU(MaNL)
+);

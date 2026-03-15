@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Hóa Đơn</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .tao-moi-box { padding: 15px; border: 2px dashed #4CAF50; display: inline-block; margin-bottom: 20px; background-color: #f9f9f9;}
+    table { border-collapse: collapse; width: 90%; }
+    th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    .btn-goi-mon { background-color: #ff9800; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; font-weight: bold;}
+  </style>
+</head>
+<body>
+<a href="/" style="text-decoration: none; color: blue;">⬅ Quay lại Trang chủ</a>
+<h1>Quản lý Hóa Đơn (Order)</h1>
+
+<div class="tao-moi-box">
+  <h3 style="margin-top: 0; color: #4CAF50;">Mở Bàn Cho Khách</h3>
+  <form th:action="@{/hoadon/tao}" method="post">
+    <label>Chọn bàn: </label>
+    <select name="maBan" required style="padding: 5px; font-size: 16px;">
+      <option value="">-- Chọn bàn trống --</option>
+      <option th:each="b : ${dsBanAn}"
+              th:value="${b.maBan}"
+              th:text="${b.tenBan} + ' - ' + ${b.trangThai}"></option>
+    </select>
+    <button type="submit" style="background-color: #4CAF50; color: white; padding: 6px 15px; border: none; cursor: pointer; font-size: 16px;">
+      Tạo Hóa Đơn
+    </button>
+  </form>
+</div>
+
+<table>
+  <thead>
+  <tr>
+    <th>Mã HĐ</th>
+    <th>Bàn Ăn</th>
+    <th>Giờ Mở Bàn</th>
+    <th>Trạng Thái</th>
+    <th>Tổng Tiền</th>
+    <th>Thao Tác</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="hd : ${dsHoaDon}">
+    <td th:text="${hd.maHD}">1</td>
+    <td th:text="${hd.banAn != null ? hd.banAn.tenBan : 'Bàn đã xóa'}" style="font-weight: bold; font-size: 18px;">Bàn</td>
+    <td th:text="${#temporals.format(hd.ngayGioTao, 'dd/MM/yyyy HH:mm')}">Giờ</td>
+    <td th:text="${hd.trangThai}"
+        th:style="${hd.trangThai == 'Chưa thanh toán' ? 'color: red; font-weight: bold;' : 'color: green;'}">
+      Trạng thái
+    </td>
+    <td th:text="${#numbers.formatDecimal(hd.tongTien, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'" style="color: red; font-weight: bold;">0</td>
+    <td>
+      <a th:href="@{/hoadon/chitiet/{id}(id=${hd.maHD})}" class="btn-goi-mon">
+        📋 Bấm vào để Gọi Món
+      </a>
+    </td>
+  </tr>
+  </tbody>
+</table>
+</body>
+</html>

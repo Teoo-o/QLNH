@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Hệ thống quản lý nhà hàng</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="/">QUẢN LÝ NHÀ HÀNG</a>
+    <div class="collapse navbar-collapse">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link" href="/danhmuc">Danh Mục</a></li>
+        <li class="nav-item"><a class="nav-link" href="/monan">Món Ăn</a></li>
+        <li class="nav-item"><a class="nav-link" href="/banan">Bàn Ăn</a></li>
+        <li class="nav-item"><a class="nav-link" href="/hoadon" style="color: #ffc107; font-weight: bold;">Hóa Đơn (Order)</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container text-center py-5">
+  <div class="p-5 mb-4 bg-white rounded-3 shadow-sm">
+    <h1 class="display-5 fw-bold text-primary">Xin chào bạn!</h1>
+    <p class="fs-4">Hệ thống quản lý nhà hàng đã sẵn sàng. Bắt đầu làm việc thôi nào!.</p>
+    <hr class="my-4">
+    <div class="d-flex justify-content-center gap-3">
+      <a href="/monan" class="btn btn-primary btn-lg">Xem thực đơn</a>
+      <a href="/banan" class="btn btn-success btn-lg">Xem sơ đồ bàn</a>
+      <a href="/hoadon" class="btn btn-warning btn-lg fw-bold">Quản lý Hóa Đơn</a>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

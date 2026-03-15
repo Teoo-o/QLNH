@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Sơ đồ Bàn Ăn</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        table { border-collapse: collapse; width: 60%; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #f2f2f2; }
+        .btn { padding: 8px 12px; text-decoration: none; color: white; background-color: #008CBA; border-radius: 4px; }
+    </style>
+</head>
+<body>
+<h1>Quản lý Sơ đồ Bàn Ăn</h1>
+<a href="/banan/them" class="btn">+ Thêm Bàn Mới</a>
+
+<table>
+    <thead>
+    <tr>
+        <th>Mã Bàn</th>
+        <th>Tên Bàn</th>
+        <th>Trạng Thái</th>
+        <th>Hành động</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="b : ${dsBanAn}">
+        <td th:text="${b.maBan}">1</td>
+        <td th:text="${b.tenBan}" style="font-weight: bold;">Bàn 1</td>
+        <td th:text="${b.trangThai}"
+            th:style="${b.trangThai == 'Trống' ? 'color: green;' : 'color: red;'}">
+            Trống
+        </td>
+        <td>
+            <a th:href="@{/banan/sua/{id}(id=${b.maBan})}" style="color: blue;">Sửa</a> |
+            <a th:href="@{/banan/xoa/{id}(id=${b.maBan})}" onclick="return confirm('Xóa bàn này?');" style="color: red;">Xóa</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

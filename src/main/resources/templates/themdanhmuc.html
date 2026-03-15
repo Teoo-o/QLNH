@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm Danh Mục Mới</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .form-container { border: 1px solid #ccc; padding: 20px; width: 300px; }
+        input[type="text"] { width: 100%; padding: 8px; margin: 10px 0; }
+        button { padding: 10px 15px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h2>Thêm Danh Mục Món Ăn Mới</h2>
+
+<div class="form-container">
+    <form th:action="@{/danhmuc/luu}" th:object="${danhMucMoi}" method="post">
+
+        <input type="hidden" th:field="*{maDM}" />
+
+        <label>Tên danh mục:</label>
+        <input type="text" th:field="*{tenDM}" placeholder="VD: Món Tráng Miệng" required />
+
+        <button type="submit">Lưu lại</button>
+        <a href="/danhmuc" style="margin-left: 10px; text-decoration: none;">Hủy</a>
+    </form>
+</div>
+
+</body>
+</html>

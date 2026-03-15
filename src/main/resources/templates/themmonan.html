@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thêm/Sửa Món Ăn</title>
+    <style>
+        body { font-family: Arial; padding: 20px; }
+        .form-box { border: 1px solid #ccc; padding: 20px; width: 350px; }
+        input, select { width: 100%; padding: 8px; margin: 10px 0; box-sizing: border-box; }
+        button { padding: 10px; background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+<h2>Điền Thông Tin Món Ăn</h2>
+<div class="form-box">
+    <form th:action="@{/monan/luu}" th:object="${monAnMoi}" method="post">
+        <input type="hidden" th:field="*{maMon}" />
+
+        <label>Tên món ăn:</label>
+        <input type="text" th:field="*{tenMon}" required />
+
+        <label>Đơn giá (VNĐ):</label>
+        <input type="number" th:field="*{donGia}" required />
+
+        <label>Chọn Danh Mục:</label>
+        <select th:field="*{danhMuc}">
+            <option value="">-- Chọn danh mục --</option>
+            <option th:each="dm : ${dsDanhMuc}"
+                    th:value="${dm.maDM}"
+                    th:text="${dm.tenDM}">
+            </option>
+        </select>
+
+        <button type="submit" style="margin-top: 15px;">Lưu Dữ Liệu</button>
+        <a href="/monan" style="margin-left: 10px;">Hủy</a>
+    </form>
+</div>
+</body>
+</html>
