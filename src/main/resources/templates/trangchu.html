@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Quản Lý Nhà Hàng - Trang Chủ</title>
+    <title>Quản Lí Nhà Hàng - Trang Chủ</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; }
 
@@ -36,7 +36,7 @@
 <body>
 
 <div class="header">
-    <h1 class="header-title">🍽️ HỆ THỐNG POS NHÀ HÀNG</h1>
+    <h1 class="header-title">🍽️ QUẢN LÍ NHÀ HÀNG</h1>
     <div class="user-info">
         Xin chào: <strong id="tenNVHT">...</strong> (<span id="chucVuHT" style="color: #f1c40f;">...</span>)
         <button class="btn-logout" onclick="dangXuat()">Đăng Xuất</button>
@@ -71,7 +71,7 @@
             <p>Thanh toán, trừ kho tự động</p>
         </a>
 
-        <a href="#" class="menu-card card-report" onclick="alert('Trang này chuẩn bị được làm!')">
+        <a href="doanhthu.html" class="menu-card card-report">
             <div class="icon">📈</div>
             <h3>Báo Cáo Doanh Thu</h3>
             <p>Dành riêng cho Quản lý</p>
@@ -86,30 +86,22 @@
 </div>
 
 <script>
-    // KIỂM TRA ĐĂNG NHẬP NGAY KHI MỞ TRANG
     window.onload = function() {
-        // Lấy dữ liệu từ bộ nhớ trình duyệt
         const userStr = localStorage.getItem('nhanVienDangNhap');
-
-        // Nếu chưa đăng nhập -> Đuổi về trang dangnhap.html
         if(!userStr) {
             alert("Bạn chưa đăng nhập! Vui lòng đăng nhập trước.");
             window.location.href = "dangnhap.html";
             return;
         }
 
-        // Nếu đã đăng nhập -> Hiển thị tên và chức vụ lên góc phải
         const user = JSON.parse(userStr);
         document.getElementById('tenNVHT').innerText = user.tenNV;
         document.getElementById('chucVuHT').innerText = user.chucVu;
     };
 
-    // HÀM ĐĂNG XUẤT
     function dangXuat() {
         if(confirm("Bạn có chắc chắn muốn đăng xuất khỏi ca làm việc không?")) {
-            // Xóa cmn dữ liệu lưu trong máy
             localStorage.removeItem('nhanVienDangNhap');
-            // Đẩy về trang đăng nhập
             window.location.href = "dangnhap.html";
         }
     }

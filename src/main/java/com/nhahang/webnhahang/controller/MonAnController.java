@@ -11,16 +11,15 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/monan")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/monan") // Đường dẫn chuẩn khớp với code HTML
+@CrossOrigin(origins = "*")   // Mở cửa cho phép HTML lấy dữ liệu
 public class MonAnController {
 
     @Autowired
     private MonAnRepository monAnRepository;
 
-    // API lấy toàn bộ danh sách món ăn hiển thị lên Menu
     @GetMapping
-    public List<MonAn> layDanhSachMenu() {
+    public List<MonAn> layTatCaMonAn() {
         return monAnRepository.findAll();
     }
 }
