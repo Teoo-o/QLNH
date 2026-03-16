@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface NhanVienRepository extends JpaRepository<NhanVien, String> {
-    // Thêm sẵn hàm tìm nhân viên theo tài khoản để sau này làm chức năng Đăng nhập
-    NhanVien findByTaiKhoan(String taiKhoan);
+    //Tự động tìm nhân viên bằng Tài Khoản và Mật Khẩu
+    NhanVien findByTaiKhoanAndMatKhau(String taiKhoan, String matKhau);
 }

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Quản Lý Nhà Hàng - Trang Chủ</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; }
+
+        /* Header chứa thông tin User và Nút Đăng Xuất */
+        .header { background-color: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .header-title { font-size: 24px; font-weight: bold; margin: 0; }
+        .user-info { font-size: 16px; }
+        .btn-logout { background-color: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 15px; transition: 0.2s; }
+        .btn-logout:hover { background-color: #c0392b; }
+
+        /* Khung chứa các chức năng */
+        .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
+        .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+
+        /* Từng thẻ chức năng */
+        .menu-card { background: white; border-radius: 10px; padding: 30px 20px; text-align: center; text-decoration: none; color: #333; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.3s; display: block; border-top: 5px solid #3498db; }
+        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
+        .menu-card h3 { margin: 15px 0 5px 0; font-size: 22px; }
+        .menu-card p { margin: 0; color: #7f8c8d; font-size: 14px; }
+
+        .icon { font-size: 40px; }
+
+        /* Màu viền cho từng chức năng */
+        .card-ban { border-top-color: #2ecc71; }
+        .card-menu { border-top-color: #f1c40f; }
+        .card-bill { border-top-color: #e67e22; }
+        .card-report { border-top-color: #9b59b6; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1 class="header-title">🍽️ HỆ THỐNG POS NHÀ HÀNG</h1>
+    <div class="user-info">
+        Xin chào: <strong id="tenNVHT">...</strong> (<span id="chucVuHT" style="color: #f1c40f;">...</span>)
+        <button class="btn-logout" onclick="dangXuat()">Đăng Xuất</button>
+    </div>
+</div>
+
+<div class="container">
+    <h2 style="color: #2c3e50; margin-bottom: 30px; border-bottom: 2px solid #ccc; padding-bottom: 10px;">BẢNG ĐIỀU KHIỂN CHÍNH</h2>
+
+    <div class="grid-menu">
+        <a href="quanlyban.html" class="menu-card card-ban">
+            <div class="icon">🗺️</div>
+            <h3>Sơ Đồ Bàn</h3>
+            <p>Theo dõi bàn trống, bàn có khách</p>
+        </a>
+
+        <a href="danhsachdatban.html" class="menu-card">
+            <div class="icon">📅</div>
+            <h3>Khách Đặt Bàn</h3>
+            <p>Quản lý lịch hẹn, nhận bàn</p>
+        </a>
+
+        <a href="menugoimon.html" class="menu-card card-menu">
+            <div class="icon">🍔</div>
+            <h3>Menu Gọi Món</h3>
+            <p>Tạo hóa đơn, chuyển vào bếp</p>
+        </a>
+
+        <a href="maytinhtien.html" class="menu-card card-bill">
+            <div class="icon">💳</div>
+            <h3>Thu Ngân (Chốt Bill)</h3>
+            <p>Thanh toán, trừ kho tự động</p>
+        </a>
+
+        <a href="#" class="menu-card card-report" onclick="alert('Trang này chuẩn bị được làm!')">
+            <div class="icon">📈</div>
+            <h3>Báo Cáo Doanh Thu</h3>
+            <p>Dành riêng cho Quản lý</p>
+        </a>
+
+        <a href="#" class="menu-card" style="border-top-color: #34495e;" onclick="alert('Trang quản lý nhân sự đang phát triển')">
+            <div class="icon">👥</div>
+            <h3>Quản Lý Nhân Viên</h3>
+            <p>Thêm/Sửa/Xóa tài khoản</p>
+        </a>
+    </div>
+</div>
+
+<script>
+    // KIỂM TRA ĐĂNG NHẬP NGAY KHI MỞ TRANG
+    window.onload = function() {
+        // Lấy dữ liệu từ bộ nhớ trình duyệt
+        const userStr = localStorage.getItem('nhanVienDangNhap');
+
+        // Nếu chưa đăng nhập -> Đuổi về trang dangnhap.html
+        if(!userStr) {
+            alert("Bạn chưa đăng nhập! Vui lòng đăng nhập trước.");
+            window.location.href = "dangnhap.html";
+            return;
+        }
+
+        // Nếu đã đăng nhập -> Hiển thị tên và chức vụ lên góc phải
+        const user = JSON.parse(userStr);
+        document.getElementById('tenNVHT').innerText = user.tenNV;
+        document.getElementById('chucVuHT').innerText = user.chucVu;
+    };
+
+    // HÀM ĐĂNG XUẤT
+    function dangXuat() {
+        if(confirm("Bạn có chắc chắn muốn đăng xuất khỏi ca làm việc không?")) {
+            // Xóa cmn dữ liệu lưu trong máy
+            localStorage.removeItem('nhanVienDangNhap');
+            // Đẩy về trang đăng nhập
+            window.location.href = "dangnhap.html";
+        }
+    }
+</script>
+
+</body>
+</html>

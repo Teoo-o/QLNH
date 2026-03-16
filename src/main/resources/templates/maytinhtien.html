@@ -24,11 +24,11 @@
 </head>
 <body>
 
-<div style="background: #2c3e50; padding: 15px; margin-bottom: 20px; text-align: center; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-    <a href="quanlyban.html" style="color: white; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">🗺️ Sơ Đồ Bàn</a>
-    <a href="danhsachdatban.html" style="color: #3498db; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">📅 Đặt Bàn</a>
-    <a href="menugoimon.html" style="color: #f1c40f; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">🍔 Gọi Món</a>
-    <a href="maytinhtien.html" style="color: #2ecc71; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">💳 Tính Tiền</a>
+<div style="padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+    <a href="trangchu.html" style="text-decoration: none; font-size: 16px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7;">
+        🏠 VỀ TRANG CHỦ
+    </a>
+    <span style="color: #7f8c8d; font-size: 14px; font-weight: bold;">Hệ Thống POS Nhà Hàng</span>
 </div>
 
 <div class="container">
@@ -58,6 +58,11 @@
 </div>
 
 <script>
+    //Kiểm tra xem đã đăng nhập chưa
+    if(!localStorage.getItem('nhanVienDangNhap')) {
+        alert("🔒 Bạn chưa đăng nhập! Vui lòng quay lại cổng an ninh.");
+        window.location.href = "dangnhap.html";
+    }
     function chotHoaDon() {
         const maHD = document.getElementById('maHD').value;
         if(!maHD) {
