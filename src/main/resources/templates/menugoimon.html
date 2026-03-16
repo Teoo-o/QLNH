@@ -87,10 +87,9 @@
                 grid.innerHTML = ''; // Xóa chữ loading
 
                 data.forEach(mon => {
-                    // 1. ĐÃ BẮT ĐÚNG BỆNH: Dùng biến "dongGia" chuẩn 100% từ API của bạn
                     const giaTien = mon.dongGia;
 
-                    // 2. LINK ẢNH WIKIPEDIA BẤT TỬ (Chống rách ảnh)
+                    // 2. LINK ẢNH WIKIPEDIA (Tránh vỡ ảnh)
                     let hinhAnhLink = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Good_Food_Display_-_NCI_Visuals_Online.jpg/500px-Good_Food_Display_-_NCI_Visuals_Online.jpg"; // Ảnh mặc định
                     const tenMonLower = mon.tenMon.toLowerCase();
 
