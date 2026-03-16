@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh Sách Đặt Bàn Trước</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0;}
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #34495e; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+
+        .status-cho { color: #d35400; font-weight: bold; background: #fdebd0; padding: 4px 8px; border-radius: 4px;}
+        .status-nhan { color: #27ae60; font-weight: bold; background: #eaeded; padding: 4px 8px; border-radius: 4px;}
+
+        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; margin: 0 2px;}
+        .btn-nhan { background-color: #28a745; }
+        .btn-huy { background-color: #dc3545; }
+        .btn:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+<div style="background: #2c3e50; padding: 15px; margin-bottom: 20px; text-align: center; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <a href="quanlyban.html" style="color: white; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">🗺️ Sơ Đồ Bàn</a>
+    <a href="danhsachdatban.html" style="color: #3498db; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">📅 Đặt Bàn</a>
+    <a href="menugoimon.html" style="color: #f1c40f; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">🍔 Gọi Món</a>
+    <a href="maytinhtien.html" style="color: #2ecc71; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">💳 Tính Tiền</a>
+</div>
+
+<div class="container">
+    <h2>📅 Quản Lý Khách Đặt Bàn Trước</h2>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Mã Phiếu</th>
+            <th>Thời Gian Đến</th>
+            <th>Tên Khách Hàng</th>
+            <th>SĐT</th>
+            <th>Bàn Đặt</th>
+            <th>Số Người</th>
+            <th>Trạng Thái</th>
+            <th>Hành Động</th>
+        </tr>
+        </thead>
+        <tbody id="datBanBody">
+        <tr><td colspan="8" style="text-align: center; color: #666;">Đang tải dữ liệu từ máy chủ...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    window.onload = function() {
+        fetch('http://localhost:8080/api/datban')
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('datBanBody');
+                tbody.innerHTML = ''; // Xóa chữ loading
+
+                data.forEach(phieu => {
+                    // Xử lý ngày giờ cho đẹp (Cắt chữ T trong chuỗi ISO 8601)
+                    const thoiGian = new Date(phieu.thoiGian).toLocaleString('vi-VN');
+
+                    // Lấy tên khách và sđt (Nếu có)
+                    const tenKhach = phieu.khachHang ? phieu.khachHang.tenKH : 'Khách vãng lai';
+                    const sdtKhach = phieu.khachHang && phieu.khachHang.sdt ? phieu.khachHang.sdt : 'Không có';
+                    const banDat = phieu.banAn ? phieu.banAn.maBan : 'Chưa xếp';
+
+                    // CSS Trạng thái
+                    const statusClass = phieu.trangThai === 'Chờ xác nhận' ? 'status-cho' : 'status-nhan';
+
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                            <td><strong>${phieu.maPhieu}</strong></td>
+                            <td style="color: #2980b9; font-weight: bold;">${thoiGian}</td>
+                            <td>${tenKhach}</td>
+                            <td>${sdtKhach}</td>
+                            <td><span style="background:#eee; padding: 2px 8px; border-radius:10px;">Bàn ${banDat}</span></td>
+                            <td>${phieu.soNguoi}</td>
+                            <td><span class="${statusClass}">${phieu.trangThai}</span></td>
+                            <td>
+                                <button class="btn btn-nhan" onclick="alert('Xác nhận khách đã đến nhận bàn!')">Nhận Bàn</button>
+                                <button class="btn btn-huy" onclick="alert('Hủy phiếu đặt bàn này?')">Hủy</button>
+                            </td>
+                        `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(error => {
+                console.error("Lỗi:", error);
+                document.getElementById('datBanBody').innerHTML = '<tr><td colspan="8" style="color:red;">Lỗi kết nối máy chủ!</td></tr>';
+            });
+    };
+</script>
+</body>
+</html>

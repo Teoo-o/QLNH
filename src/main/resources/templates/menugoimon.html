@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Đặt Món (POS)</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; gap: 20px; }
+
+        /* Cột bên trái: Danh sách món ăn */
+        .menu-section { flex: 2; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; margin-top: 15px; }
+        .mon-an-card { border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: 0.2s; background: #fff; }
+        .mon-an-card:hover { border-color: #007bff; background-color: #f8f9fa; transform: translateY(-3px); }
+        .mon-an-card h4 { margin: 10px 0 5px 0; color: #333; }
+        .mon-an-card p { margin: 0; color: #e74c3c; font-weight: bold; }
+
+        /* Cột bên phải: Giỏ hàng */
+        .cart-section { flex: 1; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #ccc; padding: 10px 0; }
+        .cart-item span.name { font-weight: bold; width: 50%; }
+        .cart-item span.qty { background: #eee; padding: 2px 8px; border-radius: 10px; }
+        .cart-total { margin-top: auto; padding-top: 20px; font-size: 20px; font-weight: bold; text-align: right; color: #d35400; }
+
+        .btn-submit { background-color: #007bff; color: white; border: none; padding: 15px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; margin-top: 15px; }
+        .btn-submit:hover { background-color: #0056b3; }
+        h2 { margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px;}
+    </style>
+</head>
+<body>
+
+<div style="background: #2c3e50; padding: 15px; margin-bottom: 20px; text-align: center; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <a href="quanlyban.html" style="color: white; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">🗺️ Sơ Đồ Bàn</a>
+    <a href="danhsachdatban.html" style="color: #3498db; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">📅 Đặt Bàn</a>
+    <a href="menugoimon.html" style="color: #f1c40f; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">🍔 Gọi Món</a>
+    <a href="maytinhtien.html" style="color: #2ecc71; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">💳 Tính Tiền</a>
+</div>
+
+<div class="menu-section">
+    <h2>🍔 Menu Cửa Hàng</h2>
+    <div class="menu-grid" id="menuGrid">
+        <p>Đang tải dữ liệu từ Backend...</p>
+    </div>
+</div>
+
+<div class="cart-section">
+    <h2>🛒 Giỏ Hàng</h2>
+    <div id="cartItems">
+        <p style="text-align: center; color: #777;">Chưa có món nào</p>
+    </div>
+
+    <div class="cart-total">
+        Tổng cộng: <span id="tongTien">0đ</span>
+    </div>
+    <button class="btn-submit" onclick="guiOrderXuongBackend()">🚀 TẠO HÓA ĐƠN MỚI</button>
+</div>
+
+<script>
+    const formatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+    let gioHang = []; // Mảng chứa các món khách chọn
+
+    // 1. Tự động lấy danh sách món ăn từ Backend khi mở trang
+    window.onload = function() {
+        fetch('http://localhost:8080/api/monan')
+            .then(response => response.json())
+            .then(data => {
+                const menuGrid = document.getElementById('menuGrid');
+                menuGrid.innerHTML = ''; // Xóa chữ "Đang tải"
+
+                data.forEach(mon => {
+                    // Tạo ra các ô hình vuông cho từng món
+                    const card = document.createElement('div');
+                    card.className = 'mon-an-card';
+                    card.onclick = () => themVaoGio(mon.maMon, mon.tenMon, mon.dongGia);
+                    card.innerHTML = `
+                            <h4>${mon.tenMon}</h4>
+                            <p>${formatter.format(mon.dongGia)}</p>
+                        `;
+                    menuGrid.appendChild(card);
+                });
+            })
+            .catch(error => console.error("Chưa bật Spring Boot hoặc lỗi API:", error));
+    };
+
+    // 2. Logic Thêm vào giỏ hàng
+    function themVaoGio(maMon, tenMon, dongGia) {
+        // Kiểm tra xem món này đã có trong giỏ chưa
+        let monDaCo = gioHang.find(item => item.maMon === maMon);
+        if(monDaCo) {
+            monDaCo.soLuong += 1; // Có rồi thì tăng số lượng
+        } else {
+            gioHang.push({ maMon: maMon, tenMon: tenMon, dongGia: dongGia, soLuong: 1 }); // Chưa có thì thêm mới
+        }
+        capNhatGiaoDienGioHang();
+    }
+
+    // 3. Cập nhật lại HTML của giỏ hàng
+    function capNhatGiaoDienGioHang() {
+        const cartItems = document.getElementById('cartItems');
+        cartItems.innerHTML = '';
+        let tongTien = 0;
+
+        if(gioHang.length === 0) {
+            cartItems.innerHTML = '<p style="text-align: center; color: #777;">Chưa có món nào</p>';
+        }
+
+        gioHang.forEach(item => {
+            tongTien += item.dongGia * item.soLuong;
+            cartItems.innerHTML += `
+                    <div class="cart-item">
+                        <span class="name">${item.tenMon}</span>
+                        <span class="qty">x${item.soLuong}</span>
+                        <span>${formatter.format(item.dongGia * item.soLuong)}</span>
+                    </div>
+                `;
+        });
+
+        document.getElementById('tongTien').innerText = formatter.format(tongTien);
+    }
+
+    // 4. Gửi cục dữ liệu Giỏ hàng xuống Spring Boot để tạo Bill
+    function guiOrderXuongBackend() {
+        if(gioHang.length === 0) {
+            alert("Bạn chưa chọn món nào!"); return;
+        }
+
+        const payload = {
+            loaiHD: "Tại chỗ",
+            pttt: "Chưa thanh toán",
+            chiTietList: gioHang
+        };
+
+        // Dùng Fetch POST để bắn thẳng dữ liệu xuống API vừa tạo
+        fetch('http://localhost:8080/api/hoadon/tao-moi', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(response => {
+                if(!response.ok) throw new Error("Lỗi khi tạo hóa đơn!");
+                return response.json();
+            })
+            .then(data => {
+                alert("✅ TẠO ĐƠN THÀNH CÔNG!\nMã Hóa Đơn của bạn là: " + data.maHD);
+
+                // Reset giỏ hàng cho khách tiếp theo
+                gioHang = [];
+                capNhatGiaoDienGioHang();
+
+                // Mẹo nhỏ: Bạn có thể copy cái mã HĐ này sang file may_tinh_tien.html để test logic trừ kho!
+            })
+            .catch(error => {
+                alert("❌ Có lỗi xảy ra: " + error.message);
+            });
+    }
+</script>
+</body>
+</html>

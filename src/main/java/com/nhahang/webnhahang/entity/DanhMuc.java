@@ -7,11 +7,9 @@ import lombok.Data;
 @Table(name = "DANH_MUC")
 @Data
 public class DanhMuc {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaDM")
-    private Integer maDM;
+    private String maDM;
 
     @Column(name = "TenDM")
     private String tenDM;

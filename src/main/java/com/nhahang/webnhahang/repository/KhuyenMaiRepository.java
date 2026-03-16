@@ -1,9 +1,9 @@
 package com.nhahang.webnhahang.repository;
 
-import com.nhahang.webnhahang.entity.DanhMuc;
+import com.nhahang.webnhahang.entity.KhuyenMai;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DanhMucRepository extends JpaRepository<DanhMuc, String> {
+public interface KhuyenMaiRepository extends JpaRepository<KhuyenMai, String> {
 }

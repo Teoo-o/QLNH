@@ -8,13 +8,15 @@ import lombok.Data;
 @Data
 public class BanAn {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaBan")
-    private Integer maBan;
+    private String maBan;
 
-    @Column(name = "TenBan")
-    private String tenBan;
+    @Column(name = "KhuVuc")
+    private String khuVuc;
 
-    @Column(name = "TrangThai")
-    private String trangThai; // "Trống", "Có khách", "Đã đặt"
+    @Column(name = "SoGhe")
+    private Integer soGhe;
+
+    @Column(name = "Status")
+    private String status;
 }

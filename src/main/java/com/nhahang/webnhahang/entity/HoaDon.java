@@ -2,28 +2,63 @@ package com.nhahang.webnhahang.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.ToString;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "HOA_DON")
 @Data
 public class HoaDon {
-
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "MaHD")
-    private Integer maHD;
+    private String maHD;
 
-    @ManyToOne
+    @Column(name = "LoaiHD")
+    private String loaiHD;
+
+    @Column(name = "PhiGiaoHang")
+    private Double phiGiaoHang;
+
+    @Column(name = "SoTienGiam")
+    private Double soTienGiam;
+
+    @Column(name = "PhiNenTang")
+    private Double phiNenTang;
+
+    @Column(name = "NgayTao")
+    private LocalDateTime ngayTao = LocalDateTime.now();
+
+    @Column(name = "PTTT")
+    private String pttt;
+
+    // --- BẮT ĐẦU MAPPING CÁC KHÓA NGOẠI ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaKM")
+    @ToString.Exclude
+    private KhuyenMai khuyenMai;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaPhieu")
+    @ToString.Exclude
+    private PhieuDatBan phieuDatBan;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaNV")
+    @ToString.Exclude
+    private NhanVien nhanVien;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaDT")
+    @ToString.Exclude
+    private DoiTacGiaoHang doiTacGiaoHang;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "MaBan")
+    @ToString.Exclude
     private BanAn banAn;
 
-    @Column(name = "NgayGioTao")
-    private LocalDateTime ngayGioTao = LocalDateTime.now();
-
-    @Column(name = "TrangThai")
-    private String trangThai; // "Chưa thanh toán" hoặc "Đã thanh toán"
-
-    @Column(name = "TongTien")
-    private Double tongTien = 0.0;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "MaKH")
+    @ToString.Exclude
+    private KhachHang khachHang;
 }

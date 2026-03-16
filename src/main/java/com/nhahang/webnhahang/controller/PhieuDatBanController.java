@@ -1,7 +1,7 @@
 package com.nhahang.webnhahang.controller;
 
-import com.nhahang.webnhahang.entity.MonAn;
-import com.nhahang.webnhahang.repository.MonAnRepository;
+import com.nhahang.webnhahang.entity.PhieuDatBan;
+import com.nhahang.webnhahang.repository.PhieuDatBanRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,16 +11,15 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/monan")
+@RequestMapping("/api/datban")
 @CrossOrigin(origins = "*")
-public class MonAnController {
+public class PhieuDatBanController {
 
     @Autowired
-    private MonAnRepository monAnRepository;
+    private PhieuDatBanRepository phieuDatBanRepository;
 
-    // API lấy toàn bộ danh sách món ăn hiển thị lên Menu
     @GetMapping
-    public List<MonAn> layDanhSachMenu() {
-        return monAnRepository.findAll();
+    public List<PhieuDatBan> layDanhSachDatBan() {
+        return phieuDatBanRepository.findAll();
     }
 }

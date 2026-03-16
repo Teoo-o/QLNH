@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hệ Thống Thu Ngân - Chốt Bill</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 400px; }
+        h2 { text-align: center; color: #333; }
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
+        button { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background-color: #218838; }
+
+        /* Giao diện tờ hóa đơn in nhiệt */
+        .receipt { display: none; margin-top: 20px; padding: 15px; border: 1px dashed #000; background: #fffdf5; font-family: 'Courier New', Courier, monospace; }
+        .receipt h3 { text-align: center; margin: 0 0 10px 0; font-size: 24px; }
+        .receipt p { margin: 5px 0; font-size: 14px; }
+        .divider { border-bottom: 1px dashed #000; margin: 10px 0; }
+        .right-align { float: right; }
+        .total { font-size: 18px; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div style="background: #2c3e50; padding: 15px; margin-bottom: 20px; text-align: center; border-radius: 5px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+    <a href="quanlyban.html" style="color: white; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">🗺️ Sơ Đồ Bàn</a>
+    <a href="danhsachdatban.html" style="color: #3498db; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">📅 Đặt Bàn</a>
+    <a href="menugoimon.html" style="color: #f1c40f; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">🍔 Gọi Món</a>
+    <a href="maytinhtien.html" style="color: #2ecc71; margin: 0 15px; text-decoration: none; font-size: 18px; font-weight: bold;">💳 Tính Tiền</a>
+</div>
+
+<div class="container">
+    <h2>💳 Thu Ngân Chốt Bill</h2>
+    <div class="input-group">
+        <input type="text" id="maHD" value="HD02" placeholder="Nhập mã hóa đơn (VD: HD01, HD02)">
+        <button onclick="chotHoaDon()">TÍNH TIỀN</button>
+    </div>
+
+    <div class="receipt" id="billReceipt">
+        <h3>PHIẾU THANH TOÁN</h3>
+        <p>Mã HĐ: <span id="billMaHD">...</span></p>
+        <p>Loại: <span id="billLoai">...</span></p>
+        <p>Thanh toán: <span id="billPTTT">...</span></p>
+        <div class="divider"></div>
+
+        <p>Phí giao hàng: <span class="right-align" id="billPhiGH">0đ</span></p>
+        <p>Khuyến mãi: <span class="right-align" id="billGiamGia">0đ</span></p>
+        <p>Phí nền tảng (App): <span class="right-align" id="billPhiApp">0đ</span></p>
+
+        <div class="divider"></div>
+        <p class="total">LỢI NHUẬN QUÁN THU: <span class="right-align" style="color: red;" id="billLoiNhuan">...</span></p>
+
+        <div class="divider"></div>
+        <p style="text-align: center; font-style: italic;">Hệ thống đã tự động trừ kho nguyên liệu!</p>
+    </div>
+</div>
+
+<script>
+    function chotHoaDon() {
+        const maHD = document.getElementById('maHD').value;
+        if(!maHD) {
+            alert("Vui lòng nhập mã hóa đơn!"); return;
+        }
+
+        // Gọi API của Spring Boot
+        fetch(`http://localhost:8080/api/hoadon/tinh-tien/${maHD}`)
+            .then(response => {
+                if(!response.ok) throw new Error("Không tìm thấy hóa đơn hoặc lỗi trừ kho!");
+                return response.json();
+            })
+            .then(data => {
+                // Hiển thị phần hóa đơn lên
+                document.getElementById('billReceipt').style.display = 'block';
+
+                // Đổ dữ liệu JSON từ Backend vào HTML
+                document.getElementById('billMaHD').innerText = data.maHD;
+                document.getElementById('billLoai').innerText = data.loaiHD;
+                document.getElementById('billPTTT').innerText = data.pttt;
+
+                // Định dạng tiền tệ VNĐ
+                const formatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+
+                document.getElementById('billPhiGH').innerText = formatter.format(data.phiGiaoHang || 0);
+                document.getElementById('billGiamGia').innerText = "-" + formatter.format(data.soTienGiam || 0);
+                document.getElementById('billPhiApp').innerText = "-" + formatter.format(data.phiNenTang || 0);
+
+                // Giả lập tính tổng doanh thu mang về (Trong thực tế bạn sẽ cộng tổng chi tiết món ăn ở Backend và trả về)
+                alert("✅ Chốt đơn thành công! Hệ thống đã tự động tính tiền và trừ nguyên liệu trong kho.");
+            })
+            .catch(error => {
+                alert("❌ Lỗi: " + error.message);
+            });
+    }
+</script>
+
+</body>
+</html>
