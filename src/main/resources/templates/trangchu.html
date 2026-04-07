@@ -6,82 +6,85 @@
     <title>Quản Lí Nhà Hàng - Trang Chủ</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; }
-
-        /* Header chứa thông tin User và Nút Đăng Xuất */
         .header { background-color: #2c3e50; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .header-title { font-size: 24px; font-weight: bold; margin: 0; }
         .user-info { font-size: 16px; }
         .btn-logout { background-color: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 15px; transition: 0.2s; }
         .btn-logout:hover { background-color: #c0392b; }
 
-        /* Khung chứa các chức năng */
         .container { max-width: 1200px; margin: 40px auto; padding: 0 20px; }
-        .grid-menu { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
 
-        /* Từng thẻ chức năng */
-        .menu-card { background: white; border-radius: 10px; padding: 30px 20px; text-align: center; text-decoration: none; color: #333; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.3s; display: block; border-top: 5px solid #3498db; }
-        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.15); }
-        .menu-card h3 { margin: 15px 0 5px 0; font-size: 22px; }
+        /* Mặc định ẩn tất cả các nút, lát nữa Javascript sẽ soi quyền để bật lên */
+        .menu-card { display: none; background: white; padding: 30px 20px; border-radius: 10px; text-align: center; text-decoration: none; color: #333; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.3s; border-top: 5px solid #3498db; }
+        .menu-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
+        .icon { font-size: 40px; margin-bottom: 15px; }
+        .menu-card h3 { margin: 0 0 10px 0; font-size: 20px; }
         .menu-card p { margin: 0; color: #7f8c8d; font-size: 14px; }
 
-        .icon { font-size: 40px; }
-
-        /* Màu viền cho từng chức năng */
-        .card-ban { border-top-color: #2ecc71; }
-        .card-menu { border-top-color: #f1c40f; }
-        .card-bill { border-top-color: #e67e22; }
+        .card-table { border-top-color: #f1c40f; }
+        .card-booking { border-top-color: #e67e22; }
+        .card-order { border-top-color: #3498db; }
+        .card-bill { border-top-color: #2ecc71; }
         .card-report { border-top-color: #9b59b6; }
+        .card-hr { border-top-color: #34495e; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1 class="header-title">🍽️ QUẢN LÍ NHÀ HÀNG</h1>
+    <h1 class="header-title">🍽️ Hệ Thống Quản Lí Nhà Hàng</h1>
     <div class="user-info">
-        Xin chào: <strong id="tenNVHT">...</strong> (<span id="chucVuHT" style="color: #f1c40f;">...</span>)
+        Xin chào, <span id="chucVuHT" style="font-weight: bold; color: #f1c40f;"></span>: <span id="tenNVHT" style="font-weight: bold;"></span>
         <button class="btn-logout" onclick="dangXuat()">Đăng Xuất</button>
     </div>
 </div>
 
 <div class="container">
-    <h2 style="color: #2c3e50; margin-bottom: 30px; border-bottom: 2px solid #ccc; padding-bottom: 10px;">BẢNG ĐIỀU KHIỂN CHÍNH</h2>
+    <div class="menu-grid">
 
-    <div class="grid-menu">
-        <a href="quanlyban.html" class="menu-card card-ban">
+        <a href="quanlyban.html" class="menu-card card-table" data-roles="Quản lý,Thu ngân,Phục vụ">
             <div class="icon">🗺️</div>
-            <h3>Sơ Đồ Bàn</h3>
-            <p>Theo dõi bàn trống, bàn có khách</p>
+            <h3>Sơ Đồ Bàn Ăn</h3>
+            <p>Xem trạng thái bàn trực tuyến</p>
         </a>
 
-        <a href="danhsachdatban.html" class="menu-card">
+        <a href="danhsachdatban.html" class="menu-card card-booking" data-roles="Quản lý,Thu ngân">
             <div class="icon">📅</div>
-            <h3>Khách Đặt Bàn</h3>
-            <p>Quản lý lịch hẹn, nhận bàn</p>
+            <h3>Đặt Bàn Trước</h3>
+            <p>Quản lý khách gọi điện đặt bàn</p>
         </a>
 
-        <a href="menugoimon.html" class="menu-card card-menu">
+        <a href="menugoimon.html" class="menu-card card-order" data-roles="Quản lý,Thu ngân,Phục vụ">
             <div class="icon">🍔</div>
             <h3>Menu Gọi Món</h3>
-            <p>Tạo hóa đơn, chuyển vào bếp</p>
+            <p>Tạo order, gửi bếp</p>
         </a>
 
-        <a href="maytinhtien.html" class="menu-card card-bill">
+        <a href="maytinhtien.html" class="menu-card card-bill" data-roles="Quản lý,Thu ngân">
             <div class="icon">💳</div>
             <h3>Thu Ngân (Chốt Bill)</h3>
             <p>Thanh toán, trừ kho tự động</p>
         </a>
 
-        <a href="doanhthu.html" class="menu-card card-report">
+        <a href="quanlykho.html" class="menu-card" style="border-top-color: #e67e22;" data-roles="Quản lý,Đầu bếp">
+            <div class="icon">📦</div>
+            <h3>Kho Nguyên Liệu</h3>
+            <p>Kiểm tra tồn kho, nhập hàng</p>
+        </a>
+
+        <a href="doanhthu.html" class="menu-card card-report" data-roles="Quản lý">
             <div class="icon">📈</div>
             <h3>Báo Cáo Doanh Thu</h3>
             <p>Dành riêng cho Quản lý</p>
         </a>
 
-        <a href="#" class="menu-card" style="border-top-color: #34495e;" onclick="alert('Trang quản lý nhân sự đang phát triển')">
+        <a href="quanlynhanvien.html" class="menu-card card-hr" data-roles="Quản lý">
             <div class="icon">👥</div>
-            <h3>Quản Lý Nhân Viên</h3>
-            <p>Thêm/Sửa/Xóa tài khoản</p>
+            <h3>Quản Lý Nhân Sự</h3>
+            <p>Thêm/Sửa/Xóa và Khôi phục</p>
         </a>
+
     </div>
 </div>
 
@@ -89,7 +92,7 @@
     window.onload = function() {
         const userStr = localStorage.getItem('nhanVienDangNhap');
         if(!userStr) {
-            alert("Bạn chưa đăng nhập! Vui lòng đăng nhập trước.");
+            alert("🔒 Bạn chưa đăng nhập! Vui lòng quay lại cổng an ninh.");
             window.location.href = "dangnhap.html";
             return;
         }
@@ -97,6 +100,18 @@
         const user = JSON.parse(userStr);
         document.getElementById('tenNVHT').innerText = user.tenNV;
         document.getElementById('chucVuHT').innerText = user.chucVu;
+
+        // THUẬT TOÁN QUÉT QUYỀN: Bật sáng các nút mà chức vụ này được phép thấy
+        const chucVuCuaToi = user.chucVu;
+        const tatCaCacNut = document.querySelectorAll('.menu-card'); // Lấy toàn bộ 6 nút
+
+        tatCaCacNut.forEach(nut => {
+            const nhungAiDuocVao = nut.getAttribute('data-roles');
+            // Kiểm tra xem chữ "Phục vụ" có nằm trong danh sách quyền của nút đó không
+            if(nhungAiDuocVao.includes(chucVuCuaToi)) {
+                nut.style.display = 'block'; // Có quyền -> Bật sáng nút lên
+            }
+        });
     };
 
     function dangXuat() {

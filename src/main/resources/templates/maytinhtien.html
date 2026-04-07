@@ -3,102 +3,278 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hệ Thống Thu Ngân - Chốt Bill</title>
+    <title>Máy Tính Tiền - Thu Ngân</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 400px; }
-        h2 { text-align: center; color: #333; }
-        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; }
-        button { background-color: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background-color: #218838; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #ecf0f1; padding: 10px; margin: 0; height: 100vh; box-sizing: border-box;}
+        .container { display: flex; gap: 15px; height: calc(100vh - 80px); max-width: 1400px; margin: 0 auto; }
 
-        /* Giao diện tờ hóa đơn in nhiệt */
-        .receipt { display: none; margin-top: 20px; padding: 15px; border: 1px dashed #000; background: #fffdf5; font-family: 'Courier New', Courier, monospace; }
-        .receipt h3 { text-align: center; margin: 0 0 10px 0; font-size: 24px; }
-        .receipt p { margin: 5px 0; font-size: 14px; }
-        .divider { border-bottom: 1px dashed #000; margin: 10px 0; }
-        .right-align { float: right; }
-        .total { font-size: 18px; font-weight: bold; margin-top: 10px; }
+        .nav-bar { padding: 12px 20px; background-color: #2c3e50; color: white; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin-left: auto; margin-right: auto;}
+        .btn-home { text-decoration: none; font-size: 14px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 6px 15px; border-radius: 5px; }
+
+        /* Cột bên trái: Danh sách Bàn đang có khách */
+        .col-left { flex: 1; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 15px; overflow-y: auto; }
+        .table-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+        .table-btn { padding: 15px 10px; text-align: center; background: #e74c3c; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; border: 2px solid transparent; transition: 0.2s;}
+        .table-btn:hover { filter: brightness(1.1); }
+        .table-btn.active { border-color: #f1c40f; transform: scale(1.05); box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+
+        /* Cột ở giữa: Chi tiết Bill */
+        .col-mid { flex: 2; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 15px; display: flex; flex-direction: column; }
+        .bill-header { font-size: 18px; font-weight: bold; color: #2980b9; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .bill-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .bill-table th { background: #f8f9fa; padding: 10px; color: #7f8c8d; border-bottom: 1px solid #ddd; }
+        .bill-table td { padding: 12px 10px; border-bottom: 1px dashed #eee; font-weight: 500;}
+        .item-delete { color: #e74c3c; cursor: pointer; font-weight: bold; font-size: 16px; border: none; background: none; }
+
+        /* Cột bên phải: Thanh toán (POS Style) */
+        .col-right { flex: 1.2; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; border-top: 5px solid #2ecc71;}
+        .pay-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 16px; align-items: center;}
+        .pay-row input, .pay-row select { padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; text-align: right; font-size: 16px; width: 120px;}
+        .total-amount { font-size: 28px; font-weight: bold; color: #e74c3c; text-align: right; margin: 15px 0; padding-top: 15px; border-top: 2px solid #eee;}
+
+        .btn-checkout { width: 100%; padding: 18px; background-color: #2ecc71; color: white; border: none; border-radius: 8px; font-size: 20px; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 4px 6px rgba(46, 204, 113, 0.3);}
+        .btn-checkout:hover { background-color: #27ae60; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(46, 204, 113, 0.4);}
+        .btn-checkout:disabled { background-color: #95a5a6; cursor: not-allowed; transform: none; box-shadow: none;}
     </style>
 </head>
 <body>
 
-<div style="padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-    <a href="trangchu.html" style="text-decoration: none; font-size: 16px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7;">
-        🏠 VỀ TRANG CHỦ
-    </a>
-    <span style="color: #7f8c8d; font-size: 14px; font-weight: bold;">Quản Lí Nhà Hàng</span>
+<div class="nav-bar">
+    <a href="trangchu.html" class="btn-home">🏠 VỀ TRANG CHỦ</a>
+    <span style="font-size: 16px; font-weight: bold;">💳 MÁY TÍNH TIỀN (POS) - Thu Ngân: <span id="tenThuNgan" style="color:#f1c40f;"></span></span>
 </div>
 
 <div class="container">
-    <h2>💳 Thu Ngân Chốt Bill</h2>
-    <div class="input-group">
-        <input type="text" id="maHD" value="HD02" placeholder="Nhập mã hóa đơn (VD: HD01, HD02)">
-        <button onclick="chotHoaDon()">TÍNH TIỀN</button>
+    <div class="col-left">
+        <h3 style="margin-top:0; color:#34495e;">Bàn Đang Phục Vụ</h3>
+        <div class="table-list" id="danhSachBanCoKhach">
+        </div>
     </div>
 
-    <div class="receipt" id="billReceipt">
-        <h3>PHIẾU THANH TOÁN</h3>
-        <p>Mã HĐ: <span id="billMaHD">...</span></p>
-        <p>Loại: <span id="billLoai">...</span></p>
-        <p>Thanh toán: <span id="billPTTT">...</span></p>
-        <div class="divider"></div>
+    <div class="col-mid">
+        <div class="bill-header" id="tieuDeBill">Vui lòng chọn bàn để xem hóa đơn</div>
+        <div style="flex-grow: 1; overflow-y: auto;">
+            <table class="bill-table">
+                <thead>
+                <tr>
+                    <th>Tên Món</th>
+                    <th style="text-align: center;">SL</th>
+                    <th style="text-align: right;">Đơn Giá</th>
+                    <th style="text-align: right;">Thành Tiền</th>
+                </tr>
+                </thead>
+                <tbody id="chiTietBillBody">
+                <tr><td colspan="4" style="text-align:center; color:#999; padding: 20px;">Chưa có dữ liệu</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-        <p>Phí giao hàng: <span class="right-align" id="billPhiGH">0đ</span></p>
-        <p>Khuyến mãi: <span class="right-align" id="billGiamGia">0đ</span></p>
-        <p>Phí nền tảng (App): <span class="right-align" id="billPhiApp">0đ</span></p>
+    <div class="col-right">
+        <div>
+            <div class="pay-row">
+                <span style="color:#7f8c8d; font-weight:bold;">Tổng tiền hàng:</span>
+                <span id="tongTienHang" style="font-weight:bold;">0</span>
+            </div>
+            <div class="pay-row">
+                <span style="color:#7f8c8d; font-weight:bold;">Khuyến mãi (%):</span>
+                <input type="number" id="phanTramGiam" value="0" min="0" max="100" onchange="tinhToanTien()">
+            </div>
+            <div class="pay-row">
+                <span style="color:#7f8c8d; font-weight:bold;">VAT / Phí DV:</span>
+                <span>0</span>
+            </div>
 
-        <div class="divider"></div>
-        <p class="total">LỢI NHUẬN QUÁN THU: <span class="right-align" style="color: red;" id="billLoiNhuan">...</span></p>
+            <div class="total-amount">
+                KHÁCH CẦN TRẢ: <br> <span id="khachCanTra">0</span> ₫
+            </div>
 
-        <div class="divider"></div>
-        <p style="text-align: center; font-style: italic;">Hệ thống đã tự động trừ kho nguyên liệu!</p>
+            <div class="pay-row" style="margin-top:20px;">
+                <span style="font-weight:bold;">Khách thanh toán:</span>
+                <input type="number" id="khachDua" placeholder="Nhập tiền..." onkeyup="tinhToanTien()" style="border-color:#3498db; font-weight:bold;">
+            </div>
+            <div class="pay-row">
+                <span style="color:#7f8c8d; font-weight:bold;">Hình thức:</span>
+                <select id="pttt">
+                    <option value="Tiền mặt">Tiền mặt</option>
+                    <option value="Chuyển khoản">Chuyển khoản / Mã QR</option>
+                    <option value="Thẻ tín dụng">Thẻ tín dụng</option>
+                </select>
+            </div>
+            <div class="pay-row">
+                <span style="color:#7f8c8d; font-weight:bold;">Tiền thừa trả khách:</span>
+                <span id="tienThua" style="font-weight:bold; color:#2980b9;">0</span>
+            </div>
+        </div>
+
+        <button class="btn-checkout" id="btnThanhToan" disabled onclick="chotBill()">THANH TOÁN (F9)</button>
     </div>
 </div>
 
+<script src="config.js"></script>
 <script>
-    //Kiểm tra xem đã đăng nhập chưa
-    if(!localStorage.getItem('nhanVienDangNhap')) {
-        alert("🔒 Bạn chưa đăng nhập! Vui lòng quay lại cổng an ninh.");
-        window.location.href = "dangnhap.html";
+    let maBanDangChon = null;
+    let maHoaDonHienTai = null;
+    let tongTienGoc = 0;
+    let tienKhachPhaiTra = 0;
+
+    const userStr = localStorage.getItem('nhanVienDangNhap');
+    if(!userStr) {
+        alert("🔒 Bạn chưa đăng nhập!"); window.location.href = "dangnhap.html";
+    } else {
+        document.getElementById('tenThuNgan').innerText = JSON.parse(userStr).tenNV;
     }
-    function chotHoaDon() {
-        const maHD = document.getElementById('maHD').value;
-        if(!maHD) {
-            alert("Vui lòng nhập mã hóa đơn!"); return;
+
+    window.onload = function() {
+        taiDanhSachBanCoKhach();
+
+        // Nhận tín hiệu từ màn hình Sơ Đồ Bàn bắn sang
+        const banTuSoDo = localStorage.getItem('banDangChon');
+        if(banTuSoDo) {
+            // Đợi 0.5s cho danh sách bàn load xong rồi tự động click vào bàn đó
+            setTimeout(() => chonBan(banTuSoDo), 500);
+            localStorage.removeItem('banDangChon'); // Dọn dẹp
         }
+    };
 
-        // Gọi API của Spring Boot
-        fetch(`http://localhost:8080/api/hoadon/tinh-tien/${maHD}`)
-            .then(response => {
-                if(!response.ok) throw new Error("Không tìm thấy hóa đơn hoặc lỗi trừ kho!");
-                return response.json();
-            })
+    function taiDanhSachBanCoKhach() {
+        fetch(`${API_BASE_URL}/banan`)
+            .then(res => res.json())
             .then(data => {
-                // Hiển thị phần hóa đơn lên
-                document.getElementById('billReceipt').style.display = 'block';
+                const list = document.getElementById('danhSachBanCoKhach');
+                list.innerHTML = '';
 
-                // Đổ dữ liệu JSON từ Backend vào HTML
-                document.getElementById('billMaHD').innerText = data.maHD;
-                document.getElementById('billLoai').innerText = data.loaiHD;
-                document.getElementById('billPTTT').innerText = data.pttt;
+                // Thu ngân chỉ quan tâm bàn "Có khách"
+                const banCoKhach = data.filter(b => b.status === 'Có khách' && !b.daXoa);
 
-                // Định dạng tiền tệ VNĐ
-                const formatter = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' });
+                if(banCoKhach.length === 0) {
+                    list.innerHTML = '<p style="color:#999; font-style:italic;">Không có bàn nào đang phục vụ.</p>';
+                }
 
-                document.getElementById('billPhiGH').innerText = formatter.format(data.phiGiaoHang || 0);
-                document.getElementById('billGiamGia').innerText = "-" + formatter.format(data.soTienGiam || 0);
-                document.getElementById('billPhiApp').innerText = "-" + formatter.format(data.phiNenTang || 0);
-
-                // Giả lập tính tổng doanh thu mang về (Trong thực tế bạn sẽ cộng tổng chi tiết món ăn ở Backend và trả về)
-                alert("✅ Chốt đơn thành công! Hệ thống đã tự động tính tiền và trừ nguyên liệu trong kho.");
-            })
-            .catch(error => {
-                alert("❌ Lỗi: " + error.message);
+                banCoKhach.forEach(ban => {
+                    list.innerHTML += `<div class="table-btn" id="btnBan_${ban.maBan}" onclick="chonBan('${ban.maBan}')">Bàn ${ban.maBan}</div>`;
+                });
             });
     }
-</script>
 
+    function chonBan(maBan) {
+        // Đổi màu nút
+        document.querySelectorAll('.table-btn').forEach(btn => btn.classList.remove('active'));
+        const btnChon = document.getElementById(`btnBan_${maBan}`);
+        if(btnChon) btnChon.classList.add('active');
+
+        maBanDangChon = maBan;
+        document.getElementById('tieuDeBill').innerText = `Hóa Đơn - Bàn ${maBan}`;
+
+        // Gọi API lấy hóa đơn chưa thanh toán của bàn này
+        // Lưu ý: Tạm thời chúng ta đang code chay luồng Frontend, lát nữa mình sẽ gửi Backend xử lý cái này!
+        fetch(`${API_BASE_URL}/hoadon/ban/${maBan}/chua-thanh-toan`)
+            .then(res => {
+                if(!res.ok) throw new Error("Bàn này chưa có hóa đơn (Lỗi đồng bộ)!");
+                return res.json();
+            })
+            .then(hd => {
+                maHoaDonHienTai = hd.maHD;
+                hienThiChiTietBill(hd.chiTietList);
+            })
+            .catch(err => {
+                document.getElementById('chiTietBillBody').innerHTML = `<tr><td colspan="4" style="color:red; text-align:center;">${err.message}</td></tr>`;
+                resetBangTinhTien();
+            });
+    }
+
+    function hienThiChiTietBill(danhSachMon) {
+        const tbody = document.getElementById('chiTietBillBody');
+        tbody.innerHTML = '';
+        tongTienGoc = 0;
+
+        if(!danhSachMon || danhSachMon.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Chưa gọi món nào</td></tr>';
+            resetBangTinhTien();
+            return;
+        }
+
+        danhSachMon.forEach(item => {
+            const thanhTien = item.sl * item.donGiaBan;
+            tongTienGoc += thanhTien;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${item.monAn ? item.monAn.tenMon : 'Món không rõ'}</td>
+                    <td style="text-align: center; font-weight:bold;">${item.sl}</td>
+                    <td style="text-align: right;">${item.donGiaBan.toLocaleString('vi-VN')}</td>
+                    <td style="text-align: right; color:#c0392b;">${thanhTien.toLocaleString('vi-VN')}</td>
+                </tr>
+            `;
+        });
+
+        document.getElementById('tongTienHang').innerText = tongTienGoc.toLocaleString('vi-VN');
+        tinhToanTien(); // Tính lại phần trăm giảm giá
+        document.getElementById('btnThanhToan').disabled = false;
+    }
+
+    function tinhToanTien() {
+        const phanTram = parseFloat(document.getElementById('phanTramGiam').value) || 0;
+        const tienGiam = tongTienGoc * (phanTram / 100);
+        tienKhachPhaiTra = tongTienGoc - tienGiam;
+
+        document.getElementById('khachCanTra').innerText = tienKhachPhaiTra.toLocaleString('vi-VN');
+
+        const khachDua = parseFloat(document.getElementById('khachDua').value) || 0;
+        const tienThua = khachDua - tienKhachPhaiTra;
+
+        if(khachDua > 0 && tienThua >= 0) {
+            document.getElementById('tienThua').innerText = tienThua.toLocaleString('vi-VN');
+            document.getElementById('tienThua').style.color = "#27ae60"; // Xanh: Đủ tiền
+        } else {
+            document.getElementById('tienThua').innerText = "Chưa đủ tiền";
+            document.getElementById('tienThua').style.color = "#e74c3c"; // Đỏ: Thiếu
+        }
+    }
+
+    function resetBangTinhTien() {
+        document.getElementById('tongTienHang').innerText = '0';
+        document.getElementById('khachCanTra').innerText = '0';
+        document.getElementById('tienThua').innerText = '0';
+        document.getElementById('khachDua').value = '';
+        document.getElementById('btnThanhToan').disabled = true;
+    }
+
+    function chotBill() {
+        const khachDua = parseFloat(document.getElementById('khachDua').value) || 0;
+        if(khachDua < tienKhachPhaiTra) {
+            alert("Khách đưa chưa đủ tiền kìa!"); return;
+        }
+
+        const payload = {
+            maHD: maHoaDonHienTai,
+            maBan: maBanDangChon,
+            pttt: document.getElementById('pttt').value,
+            soTienGiam: tongTienGoc - tienKhachPhaiTra,
+            maNV: JSON.parse(userStr).maNV // Đánh dấu người thu tiền
+        };
+
+        if(confirm(`Xác nhận thanh toán hóa đơn bàn ${maBanDangChon}?\nTổng thu: ${tienKhachPhaiTra.toLocaleString('vi-VN')} đ`)) {
+            // Gọi API Thanh toán (Backend sẽ lo trừ kho + Đổi bàn về trạng thái Trống)
+            fetch(`${API_BASE_URL}/hoadon/thanh-toan`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+                .then(async res => {
+                    const text = await res.text();
+                    if(!res.ok) throw new Error(text);
+                    alert("✅ THANH TOÁN THÀNH CÔNG!\nKho nguyên liệu đã tự động được trừ.");
+
+                    // Dọn dẹp màn hình
+                    taiDanhSachBanCoKhach();
+                    document.getElementById('chiTietBillBody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:#999;">Giao dịch hoàn tất</td></tr>';
+                    resetBangTinhTien();
+                    document.getElementById('tieuDeBill').innerText = `Hóa Đơn`;
+                })
+                .catch(err => alert("❌ Lỗi thanh toán: " + err.message));
+        }
+    }
+</script>
 </body>
 </html>

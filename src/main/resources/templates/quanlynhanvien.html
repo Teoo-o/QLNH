@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Nhân Sự</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0;}
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px;}
+        h2 { text-align: center; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        .nav-bar { padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin-left: auto; margin-right: auto;}
+        .btn-home { text-decoration: none; font-size: 16px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7; }
+
+        .form-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; background: #f8f9fa; padding: 15px; border-radius: 8px;}
+        .form-group input, .form-group select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 1; min-width: 150px;}
+        .btn { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; transition: 0.3s;}
+        .btn-add { background-color: #3498db; }
+        .btn-add:hover { background-color: #2980b9; }
+        .btn-edit { background-color: #f1c40f; color: #333; }
+        .btn-delete { background-color: #e74c3c; }
+        .btn-restore { background-color: #2ecc71; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #34495e; color: white; }
+        .th-trash { background-color: #7f8c8d; }
+        tr:hover { background-color: #f1f1f1; }
+
+        .trash-section { border: 2px dashed #e74c3c; background-color: #fff9f9; }
+        .trash-section h2 { color: #c0392b; border-bottom-color: #fadbd8; }
+    </style>
+</head>
+<body>
+
+<div class="nav-bar">
+    <a href="trangchu.html" class="btn-home">🏠 VỀ TRANG CHỦ</a>
+    <span style="color: #9b59b6; font-size: 16px; font-weight: bold;">👥 QUẢN LÝ NHÂN SỰ</span>
+</div>
+
+<div class="container">
+    <h2>Thông Tin Nhân Viên</h2>
+
+    <div class="form-group">
+        <input type="text" id="maNV" placeholder="Mã NV (VD: NV03)">
+        <input type="text" id="tenNV" placeholder="Họ và Tên">
+        <select id="chucVu">
+            <option value="Phục vụ">Phục vụ</option>
+            <option value="Thu ngân">Thu ngân</option>
+            <option value="Đầu bếp">Đầu bếp</option>
+            <option value="Quản lý">Quản lý</option>
+        </select>
+        <input type="text" id="taiKhoan" placeholder="Tên đăng nhập">
+        <input type="password" id="matKhau" placeholder="Mật khẩu (Bỏ trống nếu không đổi)">
+        <button class="btn btn-add" onclick="luuNhanVien()">LƯU DỮ LIỆU</button>
+        <button class="btn" style="background: #95a5a6;" onclick="resetForm()">LÀM MỚI</button>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Mã NV</th>
+            <th>Họ Tên</th>
+            <th>Chức Vụ</th>
+            <th>Tài Khoản</th>
+            <th>Thao Tác</th>
+        </tr>
+        </thead>
+        <tbody id="nhanVienBody">
+        <tr><td colspan="5">Đang tải dữ liệu...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="container trash-section">
+    <h2>🗑️ Thùng Rác (Đã Xóa)</h2>
+    <table>
+        <thead>
+        <tr>
+            <th class="th-trash">Mã NV</th>
+            <th class="th-trash">Họ Tên</th>
+            <th class="th-trash">Chức Vụ</th>
+            <th class="th-trash">Tài Khoản</th>
+            <th class="th-trash">Thao Tác</th>
+        </tr>
+        </thead>
+        <tbody id="thungRacBody">
+        <tr><td colspan="5">Thùng rác trống</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="config.js"></script>
+
+<script>
+    // BẢO VỆ MẶT TIỀN: Chỉ Quản lý mới được vào
+    const userStr = localStorage.getItem('nhanVienDangNhap');
+    if(!userStr) {
+        alert("🔒 Bạn chưa đăng nhập!"); window.location.href = "dangnhap.html";
+    } else {
+        const user = JSON.parse(userStr);
+        if(user.chucVu !== 'Quản lý') {
+            alert("⛔ CẢNH BÁO BẢO MẬT:\nChỉ cấp Quản Lý mới được phép cấu hình nhân sự!");
+            window.location.href = "trangchu.html";
+        }
+    }
+
+    let isEditMode = false;
+
+    window.onload = function() {
+        taiDanhSachNV();
+        taiThungRac();
+    };
+
+    // 1. Tải danh sách sống
+    function taiDanhSachNV() {
+        fetch(`${API_BASE_URL}/nhanvien`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('nhanVienBody');
+                tbody.innerHTML = '';
+                if(data.length === 0) tbody.innerHTML = '<tr><td colspan="5">Chưa có nhân viên nào</td></tr>';
+                data.forEach(nv => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${nv.maNV}</strong></td>
+                            <td>${nv.tenNV}</td>
+                            <td><span style="background: #ecf0f1; padding: 3px 8px; border-radius: 10px;">${nv.chucVu}</span></td>
+                            <td>${nv.taiKhoan}</td>
+                            <td>
+                                <button class="btn btn-edit" onclick="duaLenForm('${nv.maNV}', '${nv.tenNV}', '${nv.chucVu}', '${nv.taiKhoan}')">Sửa</button>
+                                <button class="btn btn-delete" onclick="xoaNhanVien('${nv.maNV}')">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    // 2. Tải thùng rác
+    function taiThungRac() {
+        fetch(`${API_BASE_URL}/nhanvien/trash`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('thungRacBody');
+                tbody.innerHTML = '';
+                if(data.length === 0) tbody.innerHTML = '<tr><td colspan="5" style="color:#999; font-style:italic;">Thùng rác trống</td></tr>';
+                data.forEach(nv => {
+                    tbody.innerHTML += `
+                        <tr style="color: #7f8c8d;">
+                            <td><strong>${nv.maNV}</strong></td>
+                            <td><del>${nv.tenNV}</del></td>
+                            <td>${nv.chucVu}</td>
+                            <td><del>${nv.taiKhoan}</del></td>
+                            <td>
+                                <button class="btn btn-restore" onclick="khoiPhucNhanVien('${nv.maNV}')">🔄 Khôi Phục</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    // 3. Thêm / Sửa
+    function luuNhanVien() {
+        const payload = {
+            maNV: document.getElementById('maNV').value,
+            tenNV: document.getElementById('tenNV').value,
+            chucVu: document.getElementById('chucVu').value,
+            taiKhoan: document.getElementById('taiKhoan').value,
+            matKhau: document.getElementById('matKhau').value
+        };
+
+        if(!payload.maNV || !payload.tenNV || !payload.taiKhoan) {
+            alert("Vui lòng điền đầy đủ Mã, Tên và Tài khoản!"); return;
+        }
+
+        const method = isEditMode ? 'PUT' : 'POST';
+        const url = isEditMode ? `${API_BASE_URL}/nhanvien/${payload.maNV}` : `${API_BASE_URL}/nhanvien`;
+
+        fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+            .then(async res => {
+                const text = await res.text();
+                if(!res.ok) throw new Error(text);
+                alert("✅ " + text);
+                resetForm();
+                taiDanhSachNV();
+                taiThungRac();
+            })
+            .catch(err => alert("❌ Lỗi: " + err.message));
+    }
+
+    // Đưa dữ liệu lên form để sửa
+    function duaLenForm(ma, ten, chucVu, taiKhoan) {
+        document.getElementById('maNV').value = ma;
+        document.getElementById('maNV').readOnly = true;
+        document.getElementById('maNV').style.background = "#eee";
+        document.getElementById('tenNV').value = ten;
+        document.getElementById('chucVu').value = chucVu;
+        document.getElementById('taiKhoan').value = taiKhoan;
+        document.getElementById('matKhau').value = "";
+        isEditMode = true;
+    }
+
+    // Hủy sửa / Làm mới ô nhập
+    function resetForm() {
+        document.getElementById('maNV').value = '';
+        document.getElementById('maNV').readOnly = false;
+        document.getElementById('maNV').style.background = "#fff";
+        document.getElementById('tenNV').value = '';
+        document.getElementById('taiKhoan').value = '';
+        document.getElementById('matKhau').value = '';
+        isEditMode = false;
+    }
+
+    // 4. Bấm nút Xóa (Ném vào thùng rác)
+    function xoaNhanVien(maNV) {
+        if(confirm(`Bạn có chắc chắn muốn XÓA nhân viên ${maNV} không? (Có thể khôi phục trong thùng rác)`)) {
+            fetch(`${API_BASE_URL}/nhanvien/${maNV}`, { method: 'DELETE' })
+                .then(async res => {
+                    const text = await res.text();
+                    if(!res.ok) throw new Error(text);
+                    alert("🗑️ " + text);
+                    taiDanhSachNV();
+                    taiThungRac();
+                })
+                .catch(err => alert("⛔ " + err.message));
+        }
+    }
+
+    // 5. Bấm nút Khôi Phục
+    function khoiPhucNhanVien(maNV) {
+        if(confirm(`Khôi phục lại nhân viên ${maNV}?`)) {
+            fetch(`${API_BASE_URL}/nhanvien/restore/${maNV}`, { method: 'PUT' })
+                .then(async res => {
+                    const text = await res.text();
+                    if(!res.ok) throw new Error(text);
+                    alert("✅ " + text);
+                    taiDanhSachNV();
+                    taiThungRac();
+                })
+                .catch(err => alert("⛔ " + err.message));
+        }
+    }
+</script>
+</body>
+</html>

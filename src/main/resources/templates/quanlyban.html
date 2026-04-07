@@ -3,92 +3,145 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sơ Đồ Bàn Ăn Nhà Hàng</title>
+  <title>Sơ Đồ Bàn Ăn - Quản Lí Nhà Hàng</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; }
-    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0;}
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
 
-    .ghi-chu { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; }
-    .dot { height: 15px; width: 15px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-right: 5px; }
-    .bg-trong { background-color: #28a745; }
-    .bg-co-khach { background-color: #dc3545; }
-    .bg-da-dat { background-color: #ffc107; }
+    .nav-bar { padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin-left: auto; margin-right: auto;}
+    .btn-home { text-decoration: none; font-size: 16px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7; }
 
-    .ban-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
-    .ban-card { border: 2px solid #ddd; border-radius: 10px; padding: 20px; text-align: center; cursor: pointer; transition: 0.3s; color: white; font-weight: bold; }
-    .ban-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-    .ban-card h3 { margin: 0 0 10px 0; font-size: 24px; }
-    .ban-card p { margin: 0; font-size: 14px; font-weight: normal; }
+    .legend { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; padding: 10px; background: #f8f9fa; border-radius: 8px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+    .box { width: 20px; height: 20px; border-radius: 4px; border: 1px solid #ccc; }
+    .box.trong { background: #2ecc71; }
+    .box.cokhach { background: #e74c3c; }
+    .box.dadat { background: #f1c40f; }
 
-    /* Màu sắc động dựa theo trạng thái */
-    .status-Trong { background-color: #28a745; border-color: #218838; }
-    .status-CoKhach { background-color: #dc3545; border-color: #c82333; }
-    .status-DaDat { background-color: #ffc107; border-color: #e0a800; color: #333; }
+    .khu-vuc { margin-bottom: 30px; }
+    .khu-vuc-title { font-size: 20px; color: #34495e; border-left: 5px solid #3498db; padding-left: 10px; margin-bottom: 15px; }
+
+    .grid-ban { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
+
+    .ban-card {
+      height: 120px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center;
+      cursor: pointer; transition: 0.3s; color: white; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; border: 2px solid rgba(0,0,0,0.1);
+    }
+    .ban-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
+    .ban-name { font-size: 24px; margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
+    .ban-info { font-size: 14px; opacity: 0.9; }
+
+    /* Chỉnh màu cho giống các phần mềm thương mại */
+    .ban-trong { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+    .ban-cokhach { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+    .ban-dadat { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #333; }
   </style>
 </head>
 <body>
 
-<div style="padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-  <a href="trangchu.html" style="text-decoration: none; font-size: 16px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7;">
-    🏠 VỀ TRANG CHỦ
-  </a>
-  <span style="color: #7f8c8d; font-size: 14px; font-weight: bold;">Quản Lí Nhà Hàng</span>
+<div class="nav-bar">
+  <a href="trangchu.html" class="btn-home">🏠 VỀ TRANG CHỦ</a>
+  <span style="color: #3498db; font-size: 16px; font-weight: bold;">🗺️ SƠ ĐỒ BÀN ĂN</span>
 </div>
 
 <div class="container">
-  <h2>🗺️ Sơ Đồ Bàn Ăn Trực Tuyến</h2>
+  <h2>Sơ Đồ Hoạt Động Của Nhà Hàng</h2>
 
-  <div class="ghi-chu">
-    <div><span class="dot bg-trong"></span> Bàn Trống</div>
-    <div><span class="dot bg-co-khach"></span> Đang Có Khách</div>
-    <div><span class="dot bg-da-dat"></span> Đã Đặt Trước</div>
+  <div class="legend">
+    <div class="legend-item"><div class="box trong"></div> Trống (Sẵn sàng)</div>
+    <div class="legend-item"><div class="box cokhach"></div> Có khách (Đang phục vụ)</div>
+    <div class="legend-item"><div class="box dadat"></div> Đã đặt (Chờ khách tới)</div>
   </div>
 
-  <div class="ban-grid" id="banGrid">
-    <p style="text-align: center; width: 100%; color: #666;">Đang đồng bộ dữ liệu với máy chủ...</p>
+  <div id="soDoNhaHang">
+    <p style="text-align: center; color: #666;">Đang tải sơ đồ bàn từ máy chủ...</p>
   </div>
 </div>
 
+<script src="config.js"></script>
 <script>
-  //Kiểm tra xem đã đăng nhập chưa
   if(!localStorage.getItem('nhanVienDangNhap')) {
-    alert("🔒 Bạn chưa đăng nhập! Vui lòng quay lại cổng an ninh.");
-    window.location.href = "dangnhap.html";
+    alert("🔒 Bạn chưa đăng nhập!"); window.location.href = "dangnhap.html";
   }
+
   window.onload = function() {
-    // Gọi API lấy danh sách bàn từ Spring Boot
-    fetch('http://localhost:8080/api/banan')
-            .then(response => response.json())
+    taiSoDoBan();
+  };
+
+  function taiSoDoBan() {
+    fetch(`${API_BASE_URL}/banan`) // Giả định bạn đã có API GET /api/banan
+            .then(res => res.json())
             .then(data => {
-              const banGrid = document.getElementById('banGrid');
-              banGrid.innerHTML = ''; // Xóa chữ loading
+              const container = document.getElementById('soDoNhaHang');
+              container.innerHTML = '';
 
-              data.forEach(ban => {
-                // Xử lý chuỗi tiếng Việt có dấu thành class CSS không dấu
-                let statusClass = "status-Trong"; // Mặc định
-                if (ban.status === "Có khách") statusClass = "status-CoKhach";
-                if (ban.status === "Đã đặt") statusClass = "status-DaDat";
+              // Lọc bỏ bàn đã xóa mềm
+              const banDangDung = data.filter(b => !b.daXoa);
 
-                // Vẽ từng cái bàn ra HTML
-                const card = document.createElement('div');
-                card.className = `ban-card ${statusClass}`;
-                card.onclick = () => alert(`Khu vực: ${ban.khuVuc}\nSố ghế: ${ban.soGhe}\nTrạng thái: ${ban.status}`);
+              // Nhóm bàn theo khu vực (Ví dụ: Tầng 1, Tầng 2)
+              const khuVucMap = new Map();
+              banDangDung.forEach(ban => {
+                const kv = ban.khuVuc || 'Khu vực chung';
+                if(!khuVucMap.has(kv)) khuVucMap.set(kv, []);
+                khuVucMap.get(kv).push(ban);
+              });
 
-                card.innerHTML = `
-                        <h3>Bàn ${ban.maBan}</h3>
-                        <p>${ban.soGhe} người</p>
-                        <p style="margin-top: 10px; font-style: italic;">${ban.status}</p>
-                    `;
-                banGrid.appendChild(card);
+              // Render từng khu vực
+              khuVucMap.forEach((danhSachBan, tenKhuVuc) => {
+                const khuVucDiv = document.createElement('div');
+                khuVucDiv.className = 'khu-vuc';
+
+                khuVucDiv.innerHTML = `<div class="khu-vuc-title">${tenKhuVuc}</div>`;
+
+                const gridDiv = document.createElement('div');
+                gridDiv.className = 'grid-ban';
+
+                danhSachBan.forEach(ban => {
+                  let classMau = 'ban-trong';
+                  let thaoTac = `chuyenSangGoiMon('${ban.maBan}')`; // Bàn trống thì sang Menu để order
+
+                  if(ban.status === 'Có khách') {
+                    classMau = 'ban-cokhach';
+                    thaoTac = `chuyenSangTinhTien('${ban.maBan}')`; // Bàn có khách thì sang Tính tiền
+                  } else if(ban.status === 'Đã đặt') {
+                    classMau = 'ban-dadat';
+                    thaoTac = `chuyenSangDatBan()`; // Bàn đã đặt thì sang ds đặt bàn xem ai đặt
+                  }
+
+                  gridDiv.innerHTML += `
+                            <div class="ban-card ${classMau}" onclick="${thaoTac}">
+                                <div class="ban-name">${ban.maBan}</div>
+                                <div class="ban-info">${ban.soGhe} ghế</div>
+                                <div style="font-size: 12px; margin-top: 5px;">${ban.status}</div>
+                            </div>
+                        `;
+                });
+
+                khuVucDiv.appendChild(gridDiv);
+                container.appendChild(khuVucDiv);
               });
             })
-            .catch(error => {
-              console.error("Lỗi:", error);
-              document.getElementById('banGrid').innerHTML = '<p style="color:red; text-align:center;">Lỗi kết nối đến máy chủ!</p>';
+            .catch(err => {
+              document.getElementById('soDoNhaHang').innerHTML = '<p style="color:red; text-align:center;">Lỗi tải sơ đồ bàn!</p>';
             });
-  };
-</script>
+  }
 
+  // Các hàm điều hướng thông minh y hệt Nhahang.ai
+  function chuyenSangGoiMon(maBan) {
+    // Lưu tạm mã bàn vào localStorage để trang Menu biết order cho bàn nào
+    localStorage.setItem('banDangChon', maBan);
+    window.location.href = "menugoimon.html";
+  }
+
+  function chuyenSangTinhTien(maBan) {
+    localStorage.setItem('banDangChon', maBan);
+    window.location.href = "maytinhtien.html";
+  }
+
+  function chuyenSangDatBan() {
+    window.location.href = "danhsachdatban.html";
+  }
+</script>
 </body>
 </html>

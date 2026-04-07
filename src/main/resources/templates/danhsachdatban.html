@@ -6,7 +6,7 @@
     <title>Danh Sách Đặt Bàn Trước</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0;}
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .container { max-width: 1100px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -14,93 +14,137 @@
         th { background-color: #34495e; color: white; }
         tr:hover { background-color: #f1f1f1; }
 
-        .status-cho { color: #d35400; font-weight: bold; background: #fdebd0; padding: 4px 8px; border-radius: 4px;}
-        .status-nhan { color: #27ae60; font-weight: bold; background: #eaeded; padding: 4px 8px; border-radius: 4px;}
+        /* Màu sắc trạng thái */
+        .status-cho { color: #d35400; font-weight: bold; background: #fdebd0; padding: 5px 10px; border-radius: 20px; font-size: 13px;}
+        .status-nhan { color: #27ae60; font-weight: bold; background: #e8f6f3; padding: 5px 10px; border-radius: 20px; font-size: 13px;}
+        .status-huy { color: #7f8c8d; font-weight: bold; background: #f2f4f4; padding: 5px 10px; border-radius: 20px; font-size: 13px; text-decoration: line-through;}
 
-        .btn { padding: 6px 12px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; margin: 0 2px;}
-        .btn-nhan { background-color: #28a745; }
-        .btn-huy { background-color: #dc3545; }
-        .btn:hover { opacity: 0.8; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; margin: 0 3px; transition: 0.2s;}
+        .btn-nhan { background-color: #2ecc71; }
+        .btn-huy { background-color: #e74c3c; }
+        .btn:hover { opacity: 0.8; transform: scale(1.05); }
+        .da-chot { color: #95a5a6; font-style: italic; font-weight: bold; font-size: 14px; }
     </style>
 </head>
 <body>
 
-<div style="padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
-    <a href="trangchu.html" style="text-decoration: none; font-size: 16px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7;">
+<div style="padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; max-width: 1100px; margin-left: auto; margin-right: auto;">
+    <a href="trangchu.html" style="text-decoration: none; font-size: 15px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7;">
         🏠 VỀ TRANG CHỦ
     </a>
-    <span style="color: #7f8c8d; font-size: 14px; font-weight: bold;">Quản Lí Nhà Hàng</span>
+    <span style="color: #34495e; font-size: 16px; font-weight: bold;">Hệ Thống Quản Lý Đặt Bàn</span>
 </div>
 
 <div class="container">
-    <h2>📅 Quản Lý Khách Đặt Bàn Trước</h2>
+    <h2>📅 Danh Sách Khách Đặt Bàn</h2>
 
     <table>
         <thead>
         <tr>
             <th>Mã Phiếu</th>
             <th>Thời Gian Đến</th>
-            <th>Tên Khách Hàng</th>
+            <th>Tên Khách</th>
             <th>SĐT</th>
-            <th>Bàn Đặt</th>
+            <th>Bàn</th>
             <th>Số Người</th>
             <th>Trạng Thái</th>
-            <th>Hành Động</th>
+            <th>Thao Tác</th>
         </tr>
         </thead>
         <tbody id="datBanBody">
-        <tr><td colspan="8" style="text-align: center; color: #666;">Đang tải dữ liệu từ máy chủ...</td></tr>
+        <tr><td colspan="8">Đang tải dữ liệu...</td></tr>
         </tbody>
     </table>
 </div>
 
+<script src="config.js"></script>
 <script>
-    //Kiểm tra xem đã đăng nhập chưa
+    // Kiểm tra đăng nhập
     if(!localStorage.getItem('nhanVienDangNhap')) {
-        alert("🔒 Bạn chưa đăng nhập! Vui lòng quay lại cổng an ninh.");
+        alert("🔒 Vui lòng đăng nhập!");
         window.location.href = "dangnhap.html";
     }
-    window.onload = function() {
-        fetch('http://localhost:8080/api/datban')
-            .then(response => response.json())
+
+    window.onload = taiDanhSachDatBan;
+
+    function taiDanhSachDatBan() {
+        fetch(`${API_BASE_URL}/datban`)
+            .then(res => res.json())
             .then(data => {
                 const tbody = document.getElementById('datBanBody');
-                tbody.innerHTML = ''; // Xóa chữ loading
+                tbody.innerHTML = '';
 
                 data.forEach(phieu => {
-                    // Xử lý ngày giờ cho đẹp (Cắt chữ T trong chuỗi ISO 8601)
                     const thoiGian = new Date(phieu.thoiGian).toLocaleString('vi-VN');
+                    const tenKhach = phieu.khachHang ? phieu.khachHang.tenKH : 'N/A';
+                    const sdtKhach = phieu.khachHang ? phieu.khachHang.sdt : 'N/A';
+                    const maBan = phieu.banAn ? phieu.banAn.maBan : 'Chưa gán';
 
-                    // Lấy tên khách và sđt (Nếu có)
-                    const tenKhach = phieu.khachHang ? phieu.khachHang.tenKH : 'Khách vãng lai';
-                    const sdtKhach = phieu.khachHang && phieu.khachHang.sdt ? phieu.khachHang.sdt : 'Không có';
-                    const banDat = phieu.banAn ? phieu.banAn.maBan : 'Chưa xếp';
+                    // 1. Định dạng màu sắc trạng thái
+                    let statusHTML = '';
+                    if(phieu.trangThai === 'Đã nhận bàn') {
+                        statusHTML = `<span class="status-nhan">Đã nhận bàn</span>`;
+                    } else if(phieu.trangThai === 'Đã hủy') {
+                        statusHTML = `<span class="status-huy">Đã hủy</span>`;
+                    } else {
+                        statusHTML = `<span class="status-cho">${phieu.trangThai || 'Chờ nhận'}</span>`;
+                    }
 
-                    // CSS Trạng thái
-                    const statusClass = phieu.trangThai === 'Chờ xác nhận' ? 'status-cho' : 'status-nhan';
+                    // 2. Logic hiển thị nút bấm (Chỉ hiện khi chưa Nhận/Hủy)
+                    let actionHTML = '';
+                    if (phieu.trangThai !== 'Đã nhận bàn' && phieu.trangThai !== 'Đã hủy') {
+                        actionHTML = `
+                            <button class="btn btn-nhan" onclick="xuLyNhanBan('${phieu.maPhieu}')">Nhận Bàn</button>
+                            <button class="btn btn-huy" onclick="xuLyHuyBan('${phieu.maPhieu}')">Hủy</button>
+                        `;
+                    } else {
+                        actionHTML = `<span class="da-chot">Đã xử lý xong</span>`;
+                    }
 
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
+                    tbody.innerHTML += `
+                        <tr>
                             <td><strong>${phieu.maPhieu}</strong></td>
-                            <td style="color: #2980b9; font-weight: bold;">${thoiGian}</td>
+                            <td style="color: #2980b9; font-weight: 600;">${thoiGian}</td>
                             <td>${tenKhach}</td>
                             <td>${sdtKhach}</td>
-                            <td><span style="background:#eee; padding: 2px 8px; border-radius:10px;">Bàn ${banDat}</span></td>
+                            <td><b style="color:#e67e22">Bàn ${maBan}</b></td>
                             <td>${phieu.soNguoi}</td>
-                            <td><span class="${statusClass}">${phieu.trangThai}</span></td>
-                            <td>
-                                <button class="btn btn-nhan" onclick="alert('Xác nhận khách đã đến nhận bàn!')">Nhận Bàn</button>
-                                <button class="btn btn-huy" onclick="alert('Hủy phiếu đặt bàn này?')">Hủy</button>
-                            </td>
-                        `;
-                    tbody.appendChild(tr);
+                            <td>${statusHTML}</td>
+                            <td>${actionHTML}</td>
+                        </tr>
+                    `;
                 });
             })
-            .catch(error => {
-                console.error("Lỗi:", error);
-                document.getElementById('datBanBody').innerHTML = '<tr><td colspan="8" style="color:red;">Lỗi kết nối máy chủ!</td></tr>';
+            .catch(err => {
+                document.getElementById('datBanBody').innerHTML = '<tr><td colspan="8" style="color:red">Lỗi kết nối Server!</td></tr>';
             });
-    };
+    }
+
+    function xuLyNhanBan(maPhieu) {
+        if(confirm("Xác nhận khách đã đến nhận bàn?")) {
+            fetch(`${API_BASE_URL}/datban/nhan-ban/${maPhieu}`, { method: 'PUT' })
+                .then(async res => {
+                    const msg = await res.text();
+                    if(!res.ok) throw new Error(msg);
+                    alert("✅ Thành công: " + msg);
+                    taiDanhSachDatBan(); // Load lại tại chỗ
+                })
+                .catch(err => alert("❌ Lỗi: " + err.message));
+        }
+    }
+
+    function xuLyHuyBan(maPhieu) {
+        if(confirm("Bạn muốn hủy đặt bàn này? Bàn sẽ trống trở lại.")) {
+            fetch(`${API_BASE_URL}/datban/huy/${maPhieu}`, { method: 'PUT' })
+                .then(async res => {
+                    const msg = await res.text();
+                    if(!res.ok) throw new Error(msg);
+                    alert("🗑️ Đã hủy: " + msg);
+                    taiDanhSachDatBan();
+                })
+                .catch(err => alert("❌ Lỗi: " + err.message));
+        }
+    }
 </script>
 </body>
 </html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Kho Nguyên Liệu</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0;}
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        .nav-bar { padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin-left: auto; margin-right: auto;}
+        .btn-home { text-decoration: none; font-size: 16px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #34495e; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+
+        .warning { color: #e74c3c; font-weight: bold; background-color: #fadbd8; padding: 3px 8px; border-radius: 4px;}
+        .safe { color: #27ae60; font-weight: bold; }
+
+        .input-nhap { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 80px; text-align: center; margin-right: 5px;}
+        .btn-nhap { background-color: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s;}
+        .btn-nhap:hover { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+
+<div class="nav-bar">
+    <a href="trangchu.html" class="btn-home">🏠 VỀ TRANG CHỦ</a>
+    <span style="color: #e67e22; font-size: 16px; font-weight: bold;">📦 QUẢN LÝ KHO NGUYÊN LIỆU</span>
+</div>
+
+<div class="container">
+    <h2>Tình Trạng Tồn Kho</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>Mã NL</th>
+            <th>Tên Nguyên Liệu</th>
+            <th>Tồn Kho Hiện Tại</th>
+            <th>Đơn Vị</th>
+            <th>Nhập Thêm Hàng</th>
+        </tr>
+        </thead>
+        <tbody id="khoBody">
+        <tr><td colspan="5">Đang tải dữ liệu kho...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="config.js"></script>
+
+<script>
+    const userStr = localStorage.getItem('nhanVienDangNhap');
+    if(!userStr) {
+        alert("🔒 Bạn chưa đăng nhập!"); window.location.href = "dangnhap.html";
+    } else {
+        const user = JSON.parse(userStr);
+        if(user.chucVu !== 'Quản lý' && user.chucVu !== 'Đầu bếp') {
+            alert("⛔ CẢNH BÁO: Chỉ Quản Lý hoặc Đầu Bếp mới được vào Kho!");
+            window.location.href = "trangchu.html";
+        }
+    }
+
+    window.onload = function() {
+        taiDuLieuKho();
+    };
+
+    function taiDuLieuKho() {
+        fetch(`${API_BASE_URL}/kho`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('khoBody');
+                tbody.innerHTML = '';
+
+                data.forEach(nl => {
+                    // Cảnh báo nếu số lượng dưới 5
+                    const statusClass = nl.sl < 5 ? 'warning' : 'safe';
+                    const warningText = nl.sl < 5 ? ' ⚠️ (Sắp Hết)' : '';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${nl.maNL}</strong></td>
+                            <td style="font-weight: bold;">${nl.tenNL}</td>
+                            <td><span class="${statusClass}">${nl.sl} ${warningText}</span></td>
+                            <td>${nl.donViTinh}</td>
+                            <td>
+                                <input type="number" id="input_${nl.maNL}" class="input-nhap" placeholder="Số lượng..." min="1">
+                                <button class="btn-nhap" onclick="nhapThem('${nl.maNL}')">Nhập</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function nhapThem(maNL) {
+        const inputVal = document.getElementById(`input_${maNL}`).value;
+        const soLuongThem = parseFloat(inputVal);
+
+        if(isNaN(soLuongThem) || soLuongThem <= 0) {
+            alert("Vui lòng nhập số lượng hợp lệ lớn hơn 0!"); return;
+        }
+
+        fetch(`${API_BASE_URL}/kho/nhap-them/${maNL}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ soLuong: soLuongThem })
+        })
+            .then(async res => {
+                const text = await res.text();
+                if(!res.ok) throw new Error(text);
+                alert(text);
+                taiDuLieuKho(); // Tải lại bảng ngay lập tức
+            })
+            .catch(err => alert(err.message));
+    }
+</script>
+</body>
+</html>

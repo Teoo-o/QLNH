@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.nhahang</groupId>
-	<artifactId>web-nha-hang</artifactId>
+	<artifactId>QLNH</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>web-nha-hang</name>
+	<name>QLNH</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
