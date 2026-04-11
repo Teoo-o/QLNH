@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi Tiết Hóa Đơn & Thanh Toán</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h2 { margin: 0; color: #2c3e50; font-size: 24px; }
+        .info-box { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #3498db; display: flex; justify-content: space-between;}
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #34495e; color: white; }
+        .tong-tien-row { font-size: 22px; font-weight: bold; background-color: #e8f8f5; color: #27ae60; }
+        .row-phu { font-size: 16px; font-weight: bold; background-color: #fafafa;}
+        .btn-group { display: flex; justify-content: flex-end; gap: 15px; margin-top: 20px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; font-size: 16px; transition: 0.2s;}
+        .btn-back { background-color: #95a5a6; }
+        .btn-order { background-color: #3498db; }
+        .btn-print { background-color: #34495e; } /* Nút In */
+        .btn-pay { background-color: #e67e22; }
+        .btn-km { background-color: #9b59b6; padding: 8px 15px; font-size: 14px; border-radius: 5px; margin-left: 10px;}
+        .btn:hover { opacity: 0.8; transform: translateY(-2px); }
+        .input-km { padding: 8px; border: 2px solid #bdc3c7; border-radius: 5px; outline: none; text-transform: uppercase; font-weight: bold; width: 180px; text-align: center;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2 id="tenBanTxt">🍽️ Bàn: ---</h2>
+        <button class="btn btn-back" onclick="window.location.href='quanlyban.html'">🔙 Về Sơ Đồ Bàn</button>
+    </div>
+
+    <div class="info-box">
+        <div>
+            <p id="maHDTxt">Mã Hóa Đơn: Đang tải...</p>
+            <p id="thoiGianTxt">Giờ vào: Đang tải...</p>
+        </div>
+        <div style="text-align: right;"><p style="color: #e74c3c;">Trạng thái: Chưa thanh toán</p></div>
+    </div>
+
+    <table>
+        <thead>
+        <tr><th>STT</th><th>Tên Món</th><th>Đơn Giá</th><th>Số Lượng</th><th>Thành Tiền</th></tr>
+        </thead>
+        <tbody id="chiTietBody"></tbody>
+        <tfoot>
+        <tr class="row-phu">
+            <td colspan="4" style="text-align: right; padding-right: 20px;">Tổng Tiền Món:</td>
+            <td id="tienMonTxt">0 ₫</td>
+        </tr>
+        <tr class="row-phu">
+            <td colspan="3" style="text-align: right; border-right: none;">
+                <input type="text" id="ipMaKM" class="input-km" placeholder="NHẬP MÃ KM...">
+                <button class="btn btn-km" onclick="apDungKhuyenMai()">🔖 ÁP DỤNG</button>
+            </td>
+            <td style="text-align: right; border-left: none; padding-right: 20px; color: #e74c3c;">Khuyến Mãi (<span id="phanTramTxt">0</span>%):</td>
+            <td id="tienGiamTxt" style="color: #e74c3c;">- 0 ₫</td>
+        </tr>
+        <tr class="tong-tien-row">
+            <td colspan="4" style="text-align: right; padding-right: 20px;">KHÁCH CẦN TRẢ:</td>
+            <td id="tienKhachTraTxt">0 ₫</td>
+        </tr>
+        </tfoot>
+    </table>
+
+    <div class="btn-group">
+        <button class="btn btn-order" onclick="window.location.href='menugoimon.html'">➕ Gọi Thêm Món</button>
+        <button class="btn btn-print" onclick="inHoaDon()">🖨️ In Hóa Đơn</button> <button class="btn btn-pay" onclick="chotThanhToan()">💵 Thu Tiền & Kết Thúc</button>
+    </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+    let maBan = localStorage.getItem('banDangChon');
+    let maHoaDonHienTai = null;
+    let tongTienGoc = 0, phanTramGiam = 0, maKMHienTai = null;
+    let dsMonAnDeIn = []; // Lưu lại danh sách để in
+
+    if(!localStorage.getItem('nhanVienDangNhap')) window.location.href = "dangnhap.html";
+
+    window.onload = function() {
+        if(!maBan) return window.location.href = "quanlyban.html";
+        document.getElementById('tenBanTxt').innerText = `🍽️ Bàn ${maBan}`;
+        taiHoaDon();
+    };
+
+    function taiHoaDon() {
+        fetch(`${API_BASE_URL}/hoadon/ban/${maBan}/chua-thanh-toan`)
+            .then(res => res.json())
+            .then(data => {
+                maHoaDonHienTai = data.maHD;
+                document.getElementById('maHDTxt').innerText = `Mã HĐ: ${data.maHD}`;
+                document.getElementById('thoiGianTxt').innerText = `Giờ vào: ${new Date(data.ngayTao).toLocaleString('vi-VN')}`;
+
+                const tbody = document.getElementById('chiTietBody');
+                tbody.innerHTML = '';
+                tongTienGoc = 0;
+                dsMonAnDeIn = data.chiTietList; // Lưu trữ để In
+
+                data.chiTietList.forEach((item, index) => {
+                    const gia = item.donGia || item.donGiaBan || 0;
+                    const sl = item.sl || 0;
+                    const tt = gia * sl;
+                    tongTienGoc += tt;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td style="text-align: left;"><b>${item.monAn.tenMon}</b></td>
+                            <td>${gia.toLocaleString()} ₫</td>
+                            <td>${sl}</td>
+                            <td>${tt.toLocaleString()} ₫</td>
+                        </tr>
+                    `;
+                });
+                capNhatTien();
+            });
+    }
+
+    function apDungKhuyenMai() {
+        const maKM = document.getElementById('ipMaKM').value.trim().toUpperCase();
+        if(!maKM) return;
+        fetch(`${API_BASE_URL}/khuyenmai/kiem-tra/${maKM}`)
+            .then(async res => {
+                if(!res.ok) throw new Error("Mã không tồn tại hoặc hết hạn!");
+                return res.json();
+            })
+            .then(data => {
+                alert(`✅ Áp dụng Voucher: Giảm ${data.phanTramGiam}%`);
+                phanTramGiam = data.phanTramGiam; maKMHienTai = data.maKM;
+                capNhatTien();
+            }).catch(err => alert("❌ " + err.message));
+    }
+
+    function capNhatTien() {
+        const soTienGiam = tongTienGoc * (phanTramGiam / 100);
+        document.getElementById('tienMonTxt').innerText = tongTienGoc.toLocaleString() + ' ₫';
+        document.getElementById('phanTramTxt').innerText = phanTramGiam;
+        document.getElementById('tienGiamTxt').innerText = "- " + soTienGiam.toLocaleString() + ' ₫';
+        document.getElementById('tienKhachTraTxt').innerText = (tongTienGoc - soTienGiam).toLocaleString() + ' ₫';
+    }
+
+    // --- HÀM TẠO VÀ IN HÓA ĐƠN ---
+    function inHoaDon() {
+        if(!maHoaDonHienTai || dsMonAnDeIn.length === 0) {
+            alert("Hóa đơn trống!"); return;
+        }
+
+        const tienGiam = tongTienGoc * (phanTramGiam / 100);
+        const thanhToan = tongTienGoc - tienGiam;
+        const printWindow = window.open('', '_blank', 'width=400,height=600');
+
+        let chiTietHTML = '';
+        dsMonAnDeIn.forEach(item => {
+            const gia = item.donGia || item.donGiaBan || 0;
+            const sl = item.sl || 0;
+            chiTietHTML += `
+                <tr>
+                    <td style="text-align: left;">${item.monAn.tenMon}</td>
+                    <td style="text-align: center;">${sl}</td>
+                    <td style="text-align: right;">${(gia * sl).toLocaleString()}</td>
+                </tr>
+            `;
+        });
+
+        const html = `
+            <html>
+            <head>
+                <style>
+                    body { font-family: monospace; width: 100%; margin: 0; padding: 10px; font-size: 14px;}
+                    .center { text-align: center; }
+                    .bold { font-weight: bold; }
+                    .line { border-bottom: 1px dashed #000; margin: 10px 0; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px;}
+                    td, th { padding: 4px 0; border-bottom: 1px dotted #ccc; }
+                </style>
+            </head>
+            <body>
+                <h2 class="center">NHÀ HÀNG HAO HAO</h2>
+                <div class="center">ĐC: 123 Phố Ẩm Thực, Hà Nội</div>
+                <div class="center">SĐT: 0988.888.888</div>
+                <div class="line"></div>
+                <div><b>Mã HĐ:</b> ${maHoaDonHienTai}</div>
+                <div><b>Bàn:</b> ${maBan}</div>
+                <div><b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}</div>
+                <div class="line"></div>
+                <table>
+                    <tr><th style="text-align:left">Tên Món</th><th>SL</th><th style="text-align:right">T.Tiền</th></tr>
+                    ${chiTietHTML}
+                </table>
+                <div class="line"></div>
+                <div style="display:flex; justify-content:space-between;"><span>Cộng tiền hàng:</span> <span>${tongTienGoc.toLocaleString()}</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Khuyến mãi (${phanTramGiam}%):</span> <span>-${tienGiam.toLocaleString()}</span></div>
+                <div class="line"></div>
+                <div style="display:flex; justify-content:space-between; font-size: 18px; font-weight:bold;">
+                    <span>TỔNG CỘNG:</span> <span>${thanhToan.toLocaleString()} ₫</span>
+                </div>
+                <div class="line"></div>
+                <div class="center" style="margin-top: 20px;">Cảm ơn quý khách và hẹn gặp lại!</div>
+            </body>
+            </html>
+        `;
+
+        printWindow.document.write(html);
+        printWindow.document.close();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 500); // Đợi 0.5s để load giao diện xong mới bật hộp thoại in
+    }
+
+    function chotThanhToan() {
+        if(!confirm("Xác nhận đã thu tiền khách?")) return;
+        const dataThanhToan = {
+            maHD: maHoaDonHienTai, maBan: maBan, pttt: "Tiền mặt",
+            maKM: maKMHienTai, soTienGiam: tongTienGoc * (phanTramGiam / 100)
+        };
+        fetch(`${API_BASE_URL}/hoadon/thanh-toan`, {
+            method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(dataThanhToan)
+        }).then(res => res.json()).then(data => {
+            alert("✅ " + data.message); window.location.href = "quanlyban.html";
+        });
+    }
+</script>
+</body>
+</html>

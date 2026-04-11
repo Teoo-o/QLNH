@@ -8,7 +8,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @RestController
@@ -16,20 +15,14 @@ import java.util.*;
 @CrossOrigin(origins = "*")
 public class HoaDonController {
 
-    @Autowired
-    private HoaDonRepository hoaDonRepository;
-    @Autowired
-    private BanAnRepository banAnRepository;
-    @Autowired
-    private MonAnRepository monAnRepository;
-    @Autowired
-    private HdMaRepository hdMaRepository; // Đã đổi tên
-    @Autowired
-    private NguyenLieuRepository nguyenLieuRepository;
-    @Autowired
-    private MaNlRepository maNlRepository; // Đã đổi tên
+    @Autowired private HoaDonRepository hoaDonRepository;
+    @Autowired private BanAnRepository banAnRepository;
+    @Autowired private MonAnRepository monAnRepository;
+    @Autowired private HdMaRepository hdMaRepository;
+    @Autowired private NguyenLieuRepository nguyenLieuRepository;
+    @Autowired private MaNlRepository maNlRepository;
 
-    // 1. TẠO HÓA ĐƠN MỚI TỪ BỘ PHẬN ORDER
+    // 1. TẠO HÓA ĐƠN HOẶC GỌI THÊM MÓN
     @PostMapping("/tao-moi")
     @Transactional
     public ResponseEntity<?> taoHoaDon(@RequestBody Map<String, Object> payload) {
@@ -37,58 +30,66 @@ public class HoaDonController {
             String maBan = (String) payload.get("maBan");
             List<Map<String, Object>> chiTietList = (List<Map<String, Object>>) payload.get("chiTietList");
 
-            String maHD = "HD" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+            BanAn ban = banAnRepository.findById(maBan).orElseThrow(() -> new RuntimeException("Không tìm thấy bàn"));
 
-            HoaDon hd = new HoaDon();
-            hd.setMaHD(maHD);
-            hd.setLoaiHD("Tại chỗ");
-            hd.setPttt("Chưa thanh toán");
-            hd.setNgayTao(LocalDateTime.now());
+            List<HoaDon> hdChuaThanhToan = hoaDonRepository.findByBanAn_MaBanAndPttt(maBan, "Chưa thanh toán");
+            HoaDon hoaDon;
 
-            if (maBan != null) {
-                BanAn ban = banAnRepository.findById(maBan).orElse(null);
-                if (ban != null) {
-                    ban.setStatus("Có khách");
-                    banAnRepository.save(ban);
-                    hd.setBanAn(ban);
-                }
+            if (hdChuaThanhToan.isEmpty()) {
+                hoaDon = new HoaDon();
+                hoaDon.setMaHD("HD" + System.currentTimeMillis());
+                hoaDon.setBanAn(ban);
+                hoaDon.setNgayTao(LocalDateTime.now());
+                hoaDon.setLoaiHD("Tại chỗ");
+                hoaDon.setPttt("Chưa thanh toán");
+                hoaDon = hoaDonRepository.save(hoaDon);
+            } else {
+                hoaDon = hdChuaThanhToan.get(0);
             }
-
-            hoaDonRepository.save(hd);
 
             for (Map<String, Object> item : chiTietList) {
                 String maMon = (String) item.get("maMon");
-                Integer soLuong = Integer.parseInt(item.get("soLuong").toString());
-                Double donGia = Double.parseDouble(item.get("dongGia").toString());
+                Integer soLuongMoi = Integer.parseInt(item.get("soLuong").toString());
+
+                Object donGiaObj = item.get("donGia") != null ? item.get("donGia") : item.get("dongGia");
+                Double donGia = Double.parseDouble(donGiaObj.toString());
 
                 MonAn mon = monAnRepository.findById(maMon).orElse(null);
                 if (mon != null) {
-                    HdMa chiTiet = new HdMa(); // Đã đổi class
+                    HdMaKey key = new HdMaKey(hoaDon.getMaHD(), maMon);
+                    Optional<HdMa> chiTietCu = hdMaRepository.findById(key);
 
-                    // LƯU Ý: Nếu class khóa chính của bạn tên khác, hãy đổi tên 'HdMaKey' cho khớp nhé
-                    HdMaKey key = new HdMaKey(maHD, maMon);
-
-                    chiTiet.setId(key);
-                    chiTiet.setHoaDon(hd);
-                    chiTiet.setMonAn(mon);
-                    chiTiet.setSl(soLuong);
-                    chiTiet.setDonGiaBan(donGia);
-
-                    hdMaRepository.save(chiTiet);
+                    if (chiTietCu.isPresent()) {
+                        HdMa ct = chiTietCu.get();
+                        ct.setSl(ct.getSl() + soLuongMoi);
+                        hdMaRepository.save(ct);
+                    } else {
+                        HdMa chiTietMoi = new HdMa();
+                        chiTietMoi.setId(key);
+                        chiTietMoi.setHoaDon(hoaDon);
+                        chiTietMoi.setMonAn(mon);
+                        chiTietMoi.setSl(soLuongMoi);
+                        chiTietMoi.setDonGiaBan(donGia);
+                        hdMaRepository.save(chiTietMoi);
+                    }
                 }
             }
-            return ResponseEntity.ok(Collections.singletonMap("maHD", maHD));
+
+            ban.setStatus("Có khách");
+            banAnRepository.save(ban);
+
+            return ResponseEntity.ok(Collections.singletonMap("maHD", hoaDon.getMaHD()));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Lỗi tạo hóa đơn: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Lỗi xử lý Order: " + e.getMessage()));
         }
     }
 
-    // 2. LẤY HÓA ĐƠN CHƯA THANH TOÁN CHO POS
+    // 2. MỞ BÀN ĐỎ LẤY HÓA ĐƠN RA TÍNH TIỀN
     @GetMapping("/ban/{maBan}/chua-thanh-toan")
     public ResponseEntity<?> getHoaDonChuaThanhToan(@PathVariable String maBan) {
         List<HoaDon> listHD = hoaDonRepository.findByBanAn_MaBanAndPttt(maBan, "Chưa thanh toán");
         if (listHD.isEmpty()) {
-            return ResponseEntity.badRequest().body("Không tìm thấy hóa đơn chưa thanh toán cho bàn này!");
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Bàn này chưa có hóa đơn hoặc đã thanh toán!"));
         }
 
         HoaDon hd = listHD.get(0);
@@ -97,19 +98,22 @@ public class HoaDonController {
         response.put("maHD", hd.getMaHD());
         response.put("ngayTao", hd.getNgayTao());
 
-        List<HdMa> chiTietList = hdMaRepository.findByHoaDon_MaHD(hd.getMaHD()); // Đã đổi tên
+        List<HdMa> chiTietList = hdMaRepository.findByHoaDon_MaHD(hd.getMaHD());
         List<Map<String, Object>> dsMon = new ArrayList<>();
 
         for (HdMa ct : chiTietList) {
             Map<String, Object> monData = new HashMap<>();
-            monData.put("maMon", ct.getMonAn().getMaMon());
             monData.put("sl", ct.getSl());
+            monData.put("soLuong", ct.getSl());
             monData.put("donGiaBan", ct.getDonGiaBan());
+            monData.put("donGia", ct.getDonGiaBan());
 
             Map<String, String> thongTinMon = new HashMap<>();
+            thongTinMon.put("maMon", ct.getMonAn().getMaMon());
             thongTinMon.put("tenMon", ct.getMonAn().getTenMon());
-            monData.put("monAn", thongTinMon);
+            thongTinMon.put("hinhAnh", ct.getMonAn().getHinhAnh());
 
+            monData.put("monAn", thongTinMon);
             dsMon.add(monData);
         }
         response.put("chiTietList", dsMon);
@@ -117,7 +121,7 @@ public class HoaDonController {
         return ResponseEntity.ok(response);
     }
 
-    // 3. THANH TOÁN & TRỪ KHO TỰ ĐỘNG
+    // 3. XÁC NHẬN THU TIỀN (ĐÃ TÍCH HỢP LƯU KHUYẾN MÃI)
     @PutMapping("/thanh-toan")
     @Transactional
     public ResponseEntity<?> thanhToan(@RequestBody Map<String, Object> payload) {
@@ -126,12 +130,19 @@ public class HoaDonController {
             String maBan = (String) payload.get("maBan");
             String pttt = (String) payload.get("pttt");
 
+            // Lấy thông tin Khuyến mãi gửi từ Web xuống
+            String maKM = (String) payload.get("maKM");
+            Double soTienGiam = payload.get("soTienGiam") != null ? Double.parseDouble(payload.get("soTienGiam").toString()) : 0.0;
+
             HoaDon hd = hoaDonRepository.findById(maHD)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
 
             hd.setPttt(pttt);
+            hd.setMaKM(maKM);
+            hd.setSoTienGiam(soTienGiam); // Lưu số tiền được giảm vào Database
             hoaDonRepository.save(hd);
 
+            // Xóa khách khỏi bàn
             if (maBan != null) {
                 BanAn ban = banAnRepository.findById(maBan).orElse(null);
                 if (ban != null) {
@@ -140,14 +151,13 @@ public class HoaDonController {
                 }
             }
 
-            // TRỪ KHO THEO CÔNG THỨC
-            List<HdMa> chiTietList = hdMaRepository.findByHoaDon_MaHD(maHD); // Đã đổi class
+            // TRỪ KHO TỰ ĐỘNG
+            List<HdMa> chiTietList = hdMaRepository.findByHoaDon_MaHD(maHD);
             for (HdMa chiTiet : chiTietList) {
                 String maMon = chiTiet.getMonAn().getMaMon();
                 int soLuongMonBanRa = chiTiet.getSl();
 
-                List<MaNl> congThuc = maNlRepository.findByMonAn_MaMon(maMon); // Đã đổi class
-
+                List<MaNl> congThuc = maNlRepository.findByMonAn_MaMon(maMon);
                 for (MaNl ct : congThuc) {
                     String maNL = ct.getNguyenLieu().getMaNL();
                     Double dinhLuong = ct.getDinhLuong();
@@ -155,17 +165,15 @@ public class HoaDonController {
                     NguyenLieu kho = nguyenLieuRepository.findById(maNL).orElse(null);
                     if (kho != null) {
                         double tongTieuHao = dinhLuong * soLuongMonBanRa;
-                        double slMoi = kho.getSl() - tongTieuHao;
-
-                        kho.setSl(slMoi);
+                        kho.setSl(kho.getSl() - tongTieuHao);
                         nguyenLieuRepository.save(kho);
                     }
                 }
             }
 
-            return ResponseEntity.ok("Thanh toán thành công và đã trừ kho tự động!");
+            return ResponseEntity.ok(Collections.singletonMap("message", "Thanh toán thành công và đã trừ kho!"));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Lỗi hệ thống: " + e.getMessage());
+            return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Lỗi hệ thống: " + e.getMessage()));
         }
     }
 }

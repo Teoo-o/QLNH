@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Báo Cáo Doanh Thu</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; }
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 25px; }
+    .header h2 { margin: 0; color: #2c3e50; }
+    .btn-home { background-color: #ecf0f1; color: #34495e; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; border: 1px solid #bdc3c7; transition: 0.2s;}
+    .btn-home:hover { background-color: #bdc3c7; }
+
+    /* Các khối thông số tổng quan */
+    .summary-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; }
+    .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 20px;}
+    .card-icon { font-size: 50px; background: #e8f8f5; padding: 15px; border-radius: 50%; width: 60px; height: 60px; display: flex; justify-content: center; align-items: center;}
+    .card-info h3 { margin: 0; color: #7f8c8d; font-size: 16px; font-weight: normal;}
+    .card-info p { margin: 5px 0 0; font-size: 28px; font-weight: bold; color: #2c3e50;}
+    .text-green { color: #27ae60 !important; }
+
+    /* Khối biểu đồ */
+    .chart-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    .chart-container h3 { margin-top: 0; color: #34495e; border-bottom: 2px solid #ecf0f1; padding-bottom: 15px;}
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h2>📊 Báo Cáo Doanh Thu</h2>
+    <a href="trangchu.html" class="btn-home">🏠 Về Trang Chủ</a>
+  </div>
+
+  <div class="summary-cards">
+    <div class="card">
+      <div class="card-icon">💰</div>
+      <div class="card-info">
+        <h3>Doanh Thu Hôm Nay</h3>
+        <p id="txtDoanhThu" class="text-green">Đang tải...</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon" style="background: #fdf2e9;">🧾</div>
+      <div class="card-info">
+        <h3>Số Đơn Hoàn Thành</h3>
+        <p id="txtSoDon">Đang tải...</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <h3>📈 Biểu đồ doanh thu 7 ngày gần nhất</h3>
+    <canvas id="doanhThuChart" height="100"></canvas>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+  if(!localStorage.getItem('nhanVienDangNhap')) {
+    window.location.href = "dangnhap.html";
+  }
+
+  window.onload = function() {
+    taiThongKeTongQuan();
+    veBieuDo();
+  };
+
+  // 1. Gọi API lấy Doanh thu hôm nay
+  function taiThongKeTongQuan() {
+    fetch(`${API_BASE_URL}/thongke/tong-quan`)
+            .then(res => res.json())
+            .then(data => {
+              document.getElementById('txtDoanhThu').innerText = data.doanhThuHomNay.toLocaleString('vi-VN') + " ₫";
+              document.getElementById('txtSoDon').innerText = data.soDonHomNay + " đơn";
+            })
+            .catch(err => console.error("Lỗi tải tổng quan:", err));
+  }
+
+  // 2. Gọi API lấy dữ liệu và Vẽ Biểu đồ Chart.js
+  function veBieuDo() {
+    fetch(`${API_BASE_URL}/thongke/bieu-do`)
+            .then(res => res.json())
+            .then(data => {
+              const ctx = document.getElementById('doanhThuChart').getContext('2d');
+
+              new Chart(ctx, {
+                type: 'bar', // Vẽ biểu đồ cột
+                data: {
+                  labels: data.labels, // Trục X: [Ngày 1, Ngày 2...]
+                  datasets: [{
+                    label: 'Doanh thu (VNĐ)',
+                    data: data.data, // Trục Y: [Tiền ngày 1, Tiền ngày 2...]
+                    backgroundColor: 'rgba(52, 152, 219, 0.6)',
+                    borderColor: 'rgba(41, 128, 185, 1)',
+                    borderWidth: 1,
+                    borderRadius: 5
+                  }]
+                },
+                options: {
+                  responsive: true,
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      ticks: {
+                        callback: function(value) {
+                          return value.toLocaleString('vi-VN') + ' ₫'; // Format tiền ở trục Y
+                        }
+                      }
+                    }
+                  },
+                  plugins: {
+                    tooltip: {
+                      callbacks: {
+                        label: function(context) {
+                          return context.raw.toLocaleString('vi-VN') + ' ₫';
+                        }
+                      }
+                    }
+                  }
+                }
+              });
+            })
+            .catch(err => {
+              console.error("Lỗi vẽ biểu đồ:", err);
+              document.getElementById('doanhThuChart').outerHTML = "<p style='color:red; text-align:center;'>Không thể tải dữ liệu biểu đồ!</p>";
+            });
+  }
+</script>
+</body>
+</html>

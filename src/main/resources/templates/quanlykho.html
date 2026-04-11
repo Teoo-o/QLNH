@@ -5,70 +5,70 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản Lý Kho Nguyên Liệu</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0;}
-        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h2 { margin: 0; color: #2c3e50; }
 
-        .nav-bar { padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; max-width: 1000px; margin-left: auto; margin-right: auto;}
-        .btn-home { text-decoration: none; font-size: 16px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #34495e; color: white; }
         tr:hover { background-color: #f1f1f1; }
 
-        .warning { color: #e74c3c; font-weight: bold; background-color: #fadbd8; padding: 3px 8px; border-radius: 4px;}
-        .safe { color: #27ae60; font-weight: bold; }
+        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
+        .btn-nhap { background-color: #3498db; }
+        .btn-home { background-color: #ecf0f1; color: #333; text-decoration: none; padding: 10px 15px; border-radius: 5px; font-weight: bold;}
 
-        .input-nhap { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 80px; text-align: center; margin-right: 5px;}
-        .btn-nhap { background-color: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s;}
-        .btn-nhap:hover { background-color: #2980b9; }
+        .status-het { color: #e74c3c; font-weight: bold; background: #fdedec; padding: 5px 10px; border-radius: 20px; font-size: 13px; }
+        .status-con { color: #27ae60; font-weight: bold; background: #e8f6f3; padding: 5px 10px; border-radius: 20px; font-size: 13px; }
     </style>
 </head>
 <body>
 
-<div class="nav-bar">
-    <a href="trangchu.html" class="btn-home">🏠 VỀ TRANG CHỦ</a>
-    <span style="color: #e67e22; font-size: 16px; font-weight: bold;">📦 QUẢN LÝ KHO NGUYÊN LIỆU</span>
-</div>
-
 <div class="container">
-    <h2>Tình Trạng Tồn Kho</h2>
-    <table>
+    <div class="header">
+        <h2>📦 Quản Lý Kho & Nguyên Liệu</h2>
+        <a href="trangchu.html" class="btn-home">🏠 Về Trang Chủ</a>
+    </div>
+
+    <table id="khoTable">
         <thead>
         <tr>
             <th>Mã NL</th>
             <th>Tên Nguyên Liệu</th>
-            <th>Tồn Kho Hiện Tại</th>
+            <th>Số Lượng Tồn</th>
             <th>Đơn Vị</th>
-            <th>Nhập Thêm Hàng</th>
+            <th>Trạng Thái</th>
+            <th>Thao Tác</th>
         </tr>
         </thead>
         <tbody id="khoBody">
-        <tr><td colspan="5">Đang tải dữ liệu kho...</td></tr>
+        <tr><td colspan="6">Đang tải dữ liệu kho...</td></tr>
         </tbody>
     </table>
 </div>
 
 <script src="config.js"></script>
-
 <script>
+    // --- PHẦN BẢO VỆ (SECURITY CHECK) ĐÃ SỬA ---
     const userStr = localStorage.getItem('nhanVienDangNhap');
     if(!userStr) {
-        alert("🔒 Bạn chưa đăng nhập!"); window.location.href = "dangnhap.html";
+        window.location.href = "dangnhap.html";
     } else {
         const user = JSON.parse(userStr);
-        if(user.chucVu !== 'Quản lý' && user.chucVu !== 'Đầu bếp') {
-            alert("⛔ CẢNH BÁO: Chỉ Quản Lý hoặc Đầu Bếp mới được vào Kho!");
+        const chucVu = user.chucVu.toLowerCase().trim();
+
+        // CHỈ CHO PHÉP: Admin, Quản lý, Bếp trưởng.
+        // ĐẦU BẾP SẼ BỊ ĐUỔI RA KHỎI ĐÂY!
+        if(chucVu !== 'admin' && chucVu !== 'quản lý' && chucVu !== 'bếp trưởng') {
+            alert("⛔ QUYỀN TRUY CẬP BỊ TỪ CHỐI!\nChỉ có Quản lý hoặc Bếp trưởng mới được vào khu vực Kho.");
             window.location.href = "trangchu.html";
         }
     }
 
-    window.onload = function() {
-        taiDuLieuKho();
-    };
+    window.onload = taiDanhSachKho;
 
-    function taiDuLieuKho() {
+    function taiDanhSachKho() {
         fetch(`${API_BASE_URL}/kho`)
             .then(res => res.json())
             .then(data => {
@@ -76,46 +76,47 @@
                 tbody.innerHTML = '';
 
                 data.forEach(nl => {
-                    // Cảnh báo nếu số lượng dưới 5
-                    const statusClass = nl.sl < 5 ? 'warning' : 'safe';
-                    const warningText = nl.sl < 5 ? ' ⚠️ (Sắp Hết)' : '';
+                    const statusHTML = nl.sl <= 0
+                        ? '<span class="status-het">Hết hàng</span>'
+                        : '<span class="status-con">Còn hàng</span>';
 
                     tbody.innerHTML += `
                         <tr>
-                            <td><strong>${nl.maNL}</strong></td>
-                            <td style="font-weight: bold;">${nl.tenNL}</td>
-                            <td><span class="${statusClass}">${nl.sl} ${warningText}</span></td>
-                            <td>${nl.donViTinh}</td>
+                            <td><b>${nl.maNL}</b></td>
+                            <td style="text-align: left; padding-left: 20px;">${nl.tenNL}</td>
+                            <td style="font-weight: bold; font-size: 16px;">${nl.sl}</td>
+                            <td>${nl.donViTinh || 'Kg'}</td>
+                            <td>${statusHTML}</td>
                             <td>
-                                <input type="number" id="input_${nl.maNL}" class="input-nhap" placeholder="Số lượng..." min="1">
-                                <button class="btn-nhap" onclick="nhapThem('${nl.maNL}')">Nhập</button>
+                                <button class="btn btn-nhap" onclick="nhapThem('${nl.maNL}', '${nl.tenNL}')">➕ Nhập Hàng</button>
                             </td>
                         </tr>
                     `;
                 });
+            })
+            .catch(err => {
+                document.getElementById('khoBody').innerHTML = '<tr><td colspan="6" style="color:red">Lỗi kết nối Server!</td></tr>';
             });
     }
 
-    function nhapThem(maNL) {
-        const inputVal = document.getElementById(`input_${maNL}`).value;
-        const soLuongThem = parseFloat(inputVal);
-
-        if(isNaN(soLuongThem) || soLuongThem <= 0) {
-            alert("Vui lòng nhập số lượng hợp lệ lớn hơn 0!"); return;
-        }
+    function nhapThem(maNL, tenNL) {
+        const soLuong = prompt(`Nhập số lượng nhập thêm cho [${tenNL}]:`, "10");
+        if (soLuong === null || soLuong === "" || isNaN(soLuong) || soLuong <= 0) return;
 
         fetch(`${API_BASE_URL}/kho/nhap-them/${maNL}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ soLuong: soLuongThem })
+            body: JSON.stringify({ soLuong: parseFloat(soLuong) })
         })
             .then(async res => {
-                const text = await res.text();
-                if(!res.ok) throw new Error(text);
-                alert(text);
-                taiDuLieuKho(); // Tải lại bảng ngay lập tức
-            })
-            .catch(err => alert(err.message));
+                if(res.ok) {
+                    alert(`✅ Đã nhập thêm ${soLuong} vào kho thành công!`);
+                    taiDanhSachKho();
+                } else {
+                    const msg = await res.text();
+                    alert("❌ Lỗi: " + msg);
+                }
+            });
     }
 </script>
 </body>

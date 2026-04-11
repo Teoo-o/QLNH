@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Khuyến Mãi</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        h2 { margin: 0; color: #2c3e50; }
+
+        .form-add { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border: 1px dashed #bdc3c7;}
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: bold; margin-bottom: 5px; color: #34495e; }
+        .form-group input { padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        .full-width { grid-column: span 2; display: flex; justify-content: flex-end;}
+
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
+        th { background-color: #e74c3c; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+
+        .btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; transition: 0.2s; }
+        .btn-add { background-color: #27ae60; }
+        .btn-del { background-color: #c0392b; padding: 6px 12px;}
+        .btn:hover { opacity: 0.8; transform: scale(1.05); }
+
+        .status-active { color: #2ecc71; font-weight: bold; }
+        .status-expired { color: #95a5a6; font-weight: bold; text-decoration: line-through;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h2>🎁 Quản Lý Mã Khuyến Mãi (Voucher)</h2>
+        <a href="trangchu.html" style="text-decoration: none; font-weight: bold; color: #34495e; background: #ecf0f1; padding: 10px 15px; border-radius: 5px;">🏠 Về Trang Chủ</a>
+    </div>
+
+    <div class="form-add">
+        <div class="form-group">
+            <label>Mã Khuyến Mãi (Viết liền, không dấu):</label>
+            <input type="text" id="ipMaKM" placeholder="VD: TET2026, VIP10...">
+        </div>
+        <div class="form-group">
+            <label>Tên Chương Trình:</label>
+            <input type="text" id="ipTenKM" placeholder="VD: Giảm giá ngày lễ...">
+        </div>
+        <div class="form-group">
+            <label>Mức Giảm Giá (%):</label>
+            <input type="number" id="ipGiamGia" placeholder="VD: 10, 20, 50..." min="1" max="100">
+        </div>
+        <div class="form-group">
+            <label>Thời gian hiệu lực (Bắt đầu ➔ Kết thúc):</label>
+            <div style="display: flex; gap: 10px;">
+                <input type="datetime-local" id="ipNgayBD" style="width: 100%;">
+                <input type="datetime-local" id="ipNgayKT" style="width: 100%;">
+            </div>
+        </div>
+        <div class="full-width">
+            <button class="btn btn-add" onclick="taoMaKM()">➕ Tạo Mã Khuyến Mãi</button>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>Mã KM</th>
+            <th>Tên Chương Trình</th>
+            <th>Giảm Giá</th>
+            <th>Bắt Đầu</th>
+            <th>Kết Thúc</th>
+            <th>Trạng Thái</th>
+            <th>Thao Tác</th>
+        </tr>
+        </thead>
+        <tbody id="kmBody">
+        <tr><td colspan="7">Đang tải dữ liệu...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="config.js"></script>
+<script>
+    if(!localStorage.getItem('nhanVienDangNhap')) {
+        alert("🔒 Vui lòng đăng nhập!");
+        window.location.href = "dangnhap.html";
+    }
+
+    window.onload = taiDanhSachKM;
+
+    function taiDanhSachKM() {
+        fetch(`${API_BASE_URL}/khuyenmai`)
+            .then(res => res.json())
+            .then(data => {
+                const tbody = document.getElementById('kmBody');
+                tbody.innerHTML = '';
+                const now = new Date();
+
+                data.forEach(km => {
+                    const bd = new Date(km.ngayBD);
+                    const kt = new Date(km.ngayKT);
+
+                    // Xác định trạng thái
+                    let statusHTML = '';
+                    if(now >= bd && now <= kt) {
+                        statusHTML = '<span class="status-active">🟢 Đang diễn ra</span>';
+                    } else if (now > kt) {
+                        statusHTML = '<span class="status-expired">⚫ Đã hết hạn</span>';
+                    } else {
+                        statusHTML = '<span style="color:#f39c12; font-weight:bold;">🟠 Sắp diễn ra</span>';
+                    }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong style="color: #c0392b; font-size: 16px;">${km.maKM}</strong></td>
+                            <td>${km.tenKM}</td>
+                            <td><b style="color: #27ae60; font-size: 18px;">${km.phanTramGiam}%</b></td>
+                            <td>${bd.toLocaleString('vi-VN')}</td>
+                            <td>${kt.toLocaleString('vi-VN')}</td>
+                            <td>${statusHTML}</td>
+                            <td>
+                                <button class="btn btn-del" onclick="xoaMa('${km.maKM}')">Xóa</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+    }
+
+    function taoMaKM() {
+        const maKM = document.getElementById('ipMaKM').value.trim().toUpperCase();
+        const tenKM = document.getElementById('ipTenKM').value;
+        const phanTramGiam = document.getElementById('ipGiamGia').value;
+        const ngayBD = document.getElementById('ipNgayBD').value;
+        const ngayKT = document.getElementById('ipNgayKT').value;
+
+        if(!maKM || !tenKM || !phanTramGiam || !ngayBD || !ngayKT) {
+            alert("⚠️ Vui lòng điền đầy đủ thông tin!"); return;
+        }
+        if(new Date(ngayBD) >= new Date(ngayKT)) {
+            alert("⚠️ Ngày kết thúc phải lớn hơn ngày bắt đầu!"); return;
+        }
+
+        fetch(`${API_BASE_URL}/khuyenmai/tao-moi`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ maKM, tenKM, phanTramGiam, ngayBD, ngayKT })
+        })
+            .then(async res => {
+                const data = await res.json();
+                if(res.ok) {
+                    alert("✅ " + data.message);
+                    taiDanhSachKM();
+                } else {
+                    alert("❌ " + data.message);
+                }
+            });
+    }
+
+    function xoaMa(maKM) {
+        if(confirm(`Bạn có chắc chắn muốn xóa mã voucher ${maKM} vĩnh viễn?`)) {
+            fetch(`${API_BASE_URL}/khuyenmai/xoa/${maKM}`, { method: 'DELETE' })
+                .then(res => res.json())
+                .then(data => {
+                    alert("🗑️ " + data.message);
+                    taiDanhSachKM();
+                });
+        }
+    }
+</script>
+</body>
+</html>

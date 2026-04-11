@@ -7,14 +7,14 @@
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0;}
         .container { max-width: 1100px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px;}
+        h2 { margin: 0; color: #333; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #34495e; color: white; }
         tr:hover { background-color: #f1f1f1; }
 
-        /* Màu sắc trạng thái */
         .status-cho { color: #d35400; font-weight: bold; background: #fdebd0; padding: 5px 10px; border-radius: 20px; font-size: 13px;}
         .status-nhan { color: #27ae60; font-weight: bold; background: #e8f6f3; padding: 5px 10px; border-radius: 20px; font-size: 13px;}
         .status-huy { color: #7f8c8d; font-weight: bold; background: #f2f4f4; padding: 5px 10px; border-radius: 20px; font-size: 13px; text-decoration: line-through;}
@@ -22,8 +22,22 @@
         .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; margin: 0 3px; transition: 0.2s;}
         .btn-nhan { background-color: #2ecc71; }
         .btn-huy { background-color: #e74c3c; }
-        .btn:hover { opacity: 0.8; transform: scale(1.05); }
+        .btn-them { background-color: #3498db; padding: 10px 20px; font-size: 16px;}
+        .btn-khoa { background-color: #bdc3c7; cursor: not-allowed; }
+        .btn:hover:not(.btn-khoa) { opacity: 0.8; transform: scale(1.05); }
+
         .da-chot { color: #95a5a6; font-style: italic; font-weight: bold; font-size: 14px; }
+        .canh-bao-tre { color: #e74c3c; font-size: 11px; display: block; margin-top: 5px; font-weight: bold;}
+
+        /* Form Modal */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 8px; width: 400px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .modal-content h3 { margin-top: 0; text-align: center; color: #2c3e50; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333;}
+        .form-group input, .form-group select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;}
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;}
+        .btn-close { background-color: #95a5a6; }
     </style>
 </head>
 <body>
@@ -36,7 +50,10 @@
 </div>
 
 <div class="container">
-    <h2>📅 Danh Sách Khách Đặt Bàn</h2>
+    <div class="header-top">
+        <h2>📅 Danh Sách Khách Đặt Bàn</h2>
+        <button class="btn btn-them" onclick="moFormThem()">➕ Thêm Phiếu Đặt</button>
+    </div>
 
     <table>
         <thead>
@@ -57,14 +74,28 @@
     </table>
 </div>
 
+<div id="modalThemPhieu" class="modal">
+    <div class="modal-content">
+        <h3>Ghi Nhận Đặt Bàn Mới</h3>
+        <div class="form-group"><label>Tên Khách Hàng:</label><input type="text" id="ipTenKhach" required></div>
+        <div class="form-group"><label>Số Điện Thoại:</label><input type="text" id="ipSdt" required></div>
+        <div class="form-group"><label>Ngày & Giờ Đến:</label><input type="datetime-local" id="ipThoiGian" required></div>
+        <div class="form-group"><label>Số Người:</label><input type="number" id="ipSoNguoi" min="1" value="2" required></div>
+        <div class="form-group">
+            <label>Chọn Bàn:</label>
+            <select id="ipMaBan"><option value="">-- Chọn bàn --</option></select>
+            <small style="color: #7f8c8d; font-style: italic;">*Hệ thống cho phép chọn cả bàn đang có khách nếu đặt chỗ trước cho thời gian dài.</small>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-close" onclick="dongForm()">Hủy</button>
+            <button class="btn btn-them" onclick="taoMoiPhieu()">💾 Lưu Phiếu</button>
+        </div>
+    </div>
+</div>
+
 <script src="config.js"></script>
 <script>
-    // Kiểm tra đăng nhập
-    if(!localStorage.getItem('nhanVienDangNhap')) {
-        alert("🔒 Vui lòng đăng nhập!");
-        window.location.href = "dangnhap.html";
-    }
-
+    if(!localStorage.getItem('nhanVienDangNhap')) window.location.href = "dangnhap.html";
     window.onload = taiDanhSachDatBan;
 
     function taiDanhSachDatBan() {
@@ -73,30 +104,35 @@
             .then(data => {
                 const tbody = document.getElementById('datBanBody');
                 tbody.innerHTML = '';
+                data.sort((a,b) => new Date(b.thoiGian) - new Date(a.thoiGian));
+
+                const thoiGianHienTai = new Date();
 
                 data.forEach(phieu => {
-                    const thoiGian = new Date(phieu.thoiGian).toLocaleString('vi-VN');
+                    const thoiGianDat = new Date(phieu.thoiGian);
+                    const thoiGianHienThi = thoiGianDat.toLocaleString('vi-VN');
                     const tenKhach = phieu.khachHang ? phieu.khachHang.tenKH : 'N/A';
                     const sdtKhach = phieu.khachHang ? phieu.khachHang.sdt : 'N/A';
                     const maBan = phieu.banAn ? phieu.banAn.maBan : 'Chưa gán';
 
-                    // 1. Định dạng màu sắc trạng thái
                     let statusHTML = '';
-                    if(phieu.trangThai === 'Đã nhận bàn') {
-                        statusHTML = `<span class="status-nhan">Đã nhận bàn</span>`;
-                    } else if(phieu.trangThai === 'Đã hủy') {
-                        statusHTML = `<span class="status-huy">Đã hủy</span>`;
-                    } else {
-                        statusHTML = `<span class="status-cho">${phieu.trangThai || 'Chờ nhận'}</span>`;
-                    }
+                    if(phieu.trangThai === 'Đã nhận bàn') statusHTML = `<span class="status-nhan">Đã nhận bàn</span>`;
+                    else if(phieu.trangThai === 'Đã hủy') statusHTML = `<span class="status-huy">Đã hủy</span><span class="canh-bao-tre">(Quá hạn / Khách hủy)</span>`;
+                    else statusHTML = `<span class="status-cho">${phieu.trangThai || 'Chờ nhận'}</span>`;
 
-                    // 2. Logic hiển thị nút bấm (Chỉ hiện khi chưa Nhận/Hủy)
                     let actionHTML = '';
-                    if (phieu.trangThai !== 'Đã nhận bàn' && phieu.trangThai !== 'Đã hủy') {
-                        actionHTML = `
-                            <button class="btn btn-nhan" onclick="xuLyNhanBan('${phieu.maPhieu}')">Nhận Bàn</button>
-                            <button class="btn btn-huy" onclick="xuLyHuyBan('${phieu.maPhieu}')">Hủy</button>
-                        `;
+                    if (phieu.trangThai === 'Chờ nhận bàn') {
+                        if (thoiGianHienTai < thoiGianDat) {
+                            actionHTML = `
+                                <button class="btn btn-khoa" onclick="alert('⏳ Chưa tới giờ hẹn! Vui lòng chờ đến ${thoiGianHienThi}')">Nhận Bàn</button>
+                                <button class="btn btn-huy" onclick="xuLyHuyBan('${phieu.maPhieu}')">Hủy</button>
+                            `;
+                        } else {
+                            actionHTML = `
+                                <button class="btn btn-nhan" onclick="xuLyNhanBan('${phieu.maPhieu}', '${maBan}')">Nhận Bàn</button>
+                                <button class="btn btn-huy" onclick="xuLyHuyBan('${phieu.maPhieu}')">Hủy</button>
+                            `;
+                        }
                     } else {
                         actionHTML = `<span class="da-chot">Đã xử lý xong</span>`;
                     }
@@ -104,7 +140,7 @@
                     tbody.innerHTML += `
                         <tr>
                             <td><strong>${phieu.maPhieu}</strong></td>
-                            <td style="color: #2980b9; font-weight: 600;">${thoiGian}</td>
+                            <td style="color: #2980b9; font-weight: 600;">${thoiGianHienThi}</td>
                             <td>${tenKhach}</td>
                             <td>${sdtKhach}</td>
                             <td><b style="color:#e67e22">Bàn ${maBan}</b></td>
@@ -114,35 +150,72 @@
                         </tr>
                     `;
                 });
-            })
-            .catch(err => {
-                document.getElementById('datBanBody').innerHTML = '<tr><td colspan="8" style="color:red">Lỗi kết nối Server!</td></tr>';
             });
     }
 
-    function xuLyNhanBan(maPhieu) {
-        if(confirm("Xác nhận khách đã đến nhận bàn?")) {
-            fetch(`${API_BASE_URL}/datban/nhan-ban/${maPhieu}`, { method: 'PUT' })
-                .then(async res => {
-                    const msg = await res.text();
-                    if(!res.ok) throw new Error(msg);
-                    alert("✅ Thành công: " + msg);
-                    taiDanhSachDatBan(); // Load lại tại chỗ
-                })
-                .catch(err => alert("❌ Lỗi: " + err.message));
+    function moFormThem() {
+        document.getElementById('modalThemPhieu').style.display = 'block';
+        fetch(`${API_BASE_URL}/banan`).then(res => res.json()).then(banList => {
+            const selectBan = document.getElementById('ipMaBan');
+            selectBan.innerHTML = '<option value="">-- Chọn bàn --</option>';
+
+            // Đã mở khóa: Hiển thị TOÀN BỘ SƠ ĐỒ BÀN cho nhân viên thoải mái sắp xếp
+            banList.forEach(b => {
+                const statusHienTai = b.status || 'Trống';
+                selectBan.innerHTML += `<option value="${b.maBan}" data-soghe="${b.soGhe}">Bàn ${b.maBan} (${b.soGhe} ghế) - Hiện đang: ${statusHienTai}</option>`;
+            });
+        });
+    }
+
+    function dongForm() { document.getElementById('modalThemPhieu').style.display = 'none'; }
+
+    function taoMoiPhieu() {
+        const payload = {
+            tenKhach: document.getElementById('ipTenKhach').value,
+            sdt: document.getElementById('ipSdt').value,
+            thoiGian: document.getElementById('ipThoiGian').value,
+            soNguoi: parseInt(document.getElementById('ipSoNguoi').value),
+            maBan: document.getElementById('ipMaBan').value
+        };
+
+        if(!payload.tenKhach || !payload.sdt || !payload.thoiGian || !payload.maBan) {
+            alert("Vui lòng điền đủ thông tin!"); return;
         }
+
+        const selectBan = document.getElementById('ipMaBan');
+        const soGhe = parseInt(selectBan.options[selectBan.selectedIndex].getAttribute('data-soghe'));
+        if (payload.soNguoi > soGhe) {
+            alert(`❌ Lỗi: Bàn này chỉ có ${soGhe} ghế!`); return;
+        }
+
+        fetch(`${API_BASE_URL}/datban/tao-moi`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+        }).then(async res => {
+            if(res.ok) { alert("✅ Tạo phiếu thành công!"); dongForm(); taiDanhSachDatBan(); }
+            else { const err = await res.json(); alert("❌ " + err.message); }
+        });
+    }
+
+    function xuLyNhanBan(maPhieu, maBanView) {
+        if (!confirm(`Xác nhận khách đến nhận bàn ${maBanView}?`)) return;
+        fetch(`${API_BASE_URL}/datban/nhan-ban/${maPhieu}`, { method: 'PUT' })
+            .then(async res => {
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('banDangChon', data.maBan);
+                    window.location.href = "menugoimon.html";
+                } else {
+                    const data = await res.json();
+                    alert("❌ Lỗi: " + data.message);
+                    taiDanhSachDatBan(); // Load lại bảng nếu lỡ trễ 15 phút
+                }
+            });
     }
 
     function xuLyHuyBan(maPhieu) {
-        if(confirm("Bạn muốn hủy đặt bàn này? Bàn sẽ trống trở lại.")) {
+        if(confirm("Xác nhận hủy đặt bàn này?")) {
             fetch(`${API_BASE_URL}/datban/huy/${maPhieu}`, { method: 'PUT' })
-                .then(async res => {
-                    const msg = await res.text();
-                    if(!res.ok) throw new Error(msg);
-                    alert("🗑️ Đã hủy: " + msg);
-                    taiDanhSachDatBan();
-                })
-                .catch(err => alert("❌ Lỗi: " + err.message));
+                .then(res => { alert("🗑️ Đã hủy phiếu!"); taiDanhSachDatBan(); });
         }
     }
 </script>

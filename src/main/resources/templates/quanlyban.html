@@ -3,144 +3,191 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sơ Đồ Bàn Ăn - Quản Lí Nhà Hàng</title>
+  <title>Sơ Đồ Bàn Ăn</title>
   <style>
-    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0;}
-    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-    h2 { text-align: center; color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; }
 
-    .nav-bar { padding: 12px 20px; background-color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin-left: auto; margin-right: auto;}
-    .btn-home { text-decoration: none; font-size: 16px; font-weight: bold; color: #2c3e50; background: #ecf0f1; padding: 8px 15px; border-radius: 5px; border: 1px solid #bdc3c7; }
+    /* HEADER VÀ CHÚ THÍCH */
+    .header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 20px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+    .header h2 { margin: 0; color: #2c3e50; font-size: 28px; }
+    .btn-home { background-color: #ecf0f1; color: #34495e; padding: 10px 20px; text-decoration: none; font-weight: bold; border-radius: 8px; transition: 0.2s; border: 1px solid #bdc3c7;}
+    .btn-home:hover { background-color: #bdc3c7; }
 
-    .legend { display: flex; justify-content: center; gap: 20px; margin-bottom: 20px; padding: 10px; background: #f8f9fa; border-radius: 8px; }
-    .legend-item { display: flex; align-items: center; gap: 8px; font-weight: bold; }
-    .box { width: 20px; height: 20px; border-radius: 4px; border: 1px solid #ccc; }
-    .box.trong { background: #2ecc71; }
-    .box.cokhach { background: #e74c3c; }
-    .box.dadat { background: #f1c40f; }
+    .toolbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 30px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 30px; }
+    .legend { display: flex; gap: 20px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; font-weight: bold; color: #34495e; font-size: 15px;}
+    .dot { width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+    .dot-trong { background-color: #2ecc71; border: 2px solid #27ae60;}
+    .dot-khach { background-color: #e74c3c; border: 2px solid #c0392b;}
+    .dot-dat { background-color: #f1c40f; border: 2px solid #f39c12;}
 
-    .khu-vuc { margin-bottom: 30px; }
-    .khu-vuc-title { font-size: 20px; color: #34495e; border-left: 5px solid #3498db; padding-left: 10px; margin-bottom: 15px; }
+    /* KHUNG KHU VỰC */
+    .khu-vuc-box { background: white; border-radius: 15px; padding: 25px; margin-bottom: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #ecf0f1;}
+    .khu-vuc-title { border-left: 6px solid #3498db; padding-left: 15px; color: #2c3e50; font-size: 22px; margin-top: 0; margin-bottom: 30px;}
 
-    .grid-ban { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; }
+    /* LƯỚI BÀN ĂN */
+    .table-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 40px 20px; }
 
-    .ban-card {
-      height: 120px; border-radius: 12px; display: flex; flex-direction: column; justify-content: center; align-items: center;
-      cursor: pointer; transition: 0.3s; color: white; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; border: 2px solid rgba(0,0,0,0.1);
+    /* VẼ HÌNH CÁI BÀN CÓ GHẾ BẰNG CSS */
+    .table-wrapper {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      cursor: pointer; transition: 0.2s; position: relative;
     }
-    .ban-card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.2); }
-    .ban-name { font-size: 24px; margin-bottom: 5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
-    .ban-info { font-size: 14px; opacity: 0.9; }
+    .table-wrapper:hover { transform: translateY(-5px); }
 
-    /* Chỉnh màu cho giống các phần mềm thương mại */
-    .ban-trong { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-    .ban-cokhach { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-    .ban-dadat { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #333; }
+    .table-shape {
+      width: 80px; height: 80px;
+      border-radius: 18px; /* Bo góc thành hình cái bàn */
+      border: 6px solid #ccc;
+      display: flex; align-items: center; justify-content: center;
+      background-color: white;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      position: relative;
+      margin: 12px 0;
+      z-index: 2;
+    }
+
+    /* Vẽ 4 cái ghế nhô ra xung quanh */
+    .table-shape::before, .table-shape::after {
+      content: ''; position: absolute; background-color: #bdc3c7; border-radius: 5px; z-index: -1;
+    }
+    /* Ghế trên và dưới */
+    .table-shape::before { width: 45px; height: 104px; }
+    /* Ghế trái và phải */
+    .table-shape::after { width: 104px; height: 45px; }
+
+    .table-name { font-size: 20px; font-weight: 900; margin: 0; color: #333; z-index: 5;}
+
+    .badge { font-size: 11px; font-weight: bold; padding: 4px 12px; border-radius: 12px; color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);}
+    .so-ghe { color: #7f8c8d; font-size: 13px; font-weight: bold;}
+
+    /* MÀU SẮC TRẠNG THÁI TRỐNG */
+    .status-trong .table-shape { border-color: #2ecc71; background-color: #f0fdf4; }
+    .status-trong .badge { background-color: #2ecc71; }
+
+    /* MÀU SẮC TRẠNG THÁI CÓ KHÁCH (Hiệu ứng nhấp nháy) */
+    .status-khach .table-shape { border-color: #e74c3c; background-color: #fdf2f0; animation: pulse 2s infinite; }
+    .status-khach .table-shape::before, .status-khach .table-shape::after { background-color: #e74c3c; opacity: 0.6;} /* Ghế có người chuyển màu đỏ */
+    .status-khach .badge { background-color: #e74c3c; }
+
+    /* MÀU SẮC TRẠNG THÁI ĐÃ ĐẶT */
+    .status-dat .table-shape { border-color: #f39c12; background-color: #fef9e7; }
+    .status-dat .badge { background-color: #f39c12; }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
+      70% { box-shadow: 0 0 0 12px rgba(231, 76, 60, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(231, 76, 60, 0); }
+    }
   </style>
 </head>
 <body>
 
-<div class="nav-bar">
-  <a href="trangchu.html" class="btn-home">🏠 VỀ TRANG CHỦ</a>
-  <span style="color: #3498db; font-size: 16px; font-weight: bold;">🗺️ SƠ ĐỒ BÀN ĂN</span>
-</div>
-
 <div class="container">
-  <h2>Sơ Đồ Hoạt Động Của Nhà Hàng</h2>
-
-  <div class="legend">
-    <div class="legend-item"><div class="box trong"></div> Trống (Sẵn sàng)</div>
-    <div class="legend-item"><div class="box cokhach"></div> Có khách (Đang phục vụ)</div>
-    <div class="legend-item"><div class="box dadat"></div> Đã đặt (Chờ khách tới)</div>
+  <div class="header">
+    <h2>Sơ Đồ Bàn Ăn</h2>
+    <a href="trangchu.html" class="btn-home">Về Trang Chủ</a>
   </div>
 
-  <div id="soDoNhaHang">
-    <p style="text-align: center; color: #666;">Đang tải sơ đồ bàn từ máy chủ...</p>
+  <div class="toolbar">
+    <div class="legend">
+      <div class="legend-item"><div class="dot dot-trong"></div> Bàn Trống</div>
+      <div class="legend-item"><div class="dot dot-khach"></div> Đang Phục Vụ</div>
+      <div class="legend-item"><div class="dot dot-dat"></div> Đã Đặt Trước</div>
+    </div>
+    <div style="font-weight: bold; color: #7f8c8d;">
+      Tổng số bàn: <span id="tongSoBan" style="color:#2980b9; font-size: 18px;">0</span>
+    </div>
+  </div>
+
+  <div id="soDoBanContainer">
+    <h3 style="text-align: center; color: #95a5a6;">Đang tải sơ đồ bàn...</h3>
   </div>
 </div>
 
 <script src="config.js"></script>
 <script>
   if(!localStorage.getItem('nhanVienDangNhap')) {
-    alert("🔒 Bạn chưa đăng nhập!"); window.location.href = "dangnhap.html";
+    window.location.href = "dangnhap.html";
   }
 
-  window.onload = function() {
-    taiSoDoBan();
-  };
+  window.onload = taiSoDoBan;
 
   function taiSoDoBan() {
-    fetch(`${API_BASE_URL}/banan`) // Giả định bạn đã có API GET /api/banan
+    fetch(`${API_BASE_URL}/banan`)
             .then(res => res.json())
             .then(data => {
-              const container = document.getElementById('soDoNhaHang');
+              const container = document.getElementById('soDoBanContainer');
               container.innerHTML = '';
+              document.getElementById('tongSoBan').innerText = data.length;
 
-              // Lọc bỏ bàn đã xóa mềm
-              const banDangDung = data.filter(b => !b.daXoa);
-
-              // Nhóm bàn theo khu vực (Ví dụ: Tầng 1, Tầng 2)
-              const khuVucMap = new Map();
-              banDangDung.forEach(ban => {
-                const kv = ban.khuVuc || 'Khu vực chung';
-                if(!khuVucMap.has(kv)) khuVucMap.set(kv, []);
-                khuVucMap.get(kv).push(ban);
+              // 1. Phân loại bàn theo Khu Vực (Nếu rỗng thì cho vào "Khu Vực Chung")
+              const danhSachKhuVuc = {};
+              data.forEach(ban => {
+                const khu = ban.khuVuc || 'Khu Vực Chung';
+                if(!danhSachKhuVuc[khu]) {
+                  danhSachKhuVuc[khu] = [];
+                }
+                danhSachKhuVuc[khu].push(ban);
               });
 
-              // Render từng khu vực
-              khuVucMap.forEach((danhSachBan, tenKhuVuc) => {
-                const khuVucDiv = document.createElement('div');
-                khuVucDiv.className = 'khu-vuc';
+              // 2. Vẽ từng Khu Vực ra màn hình
+              for (const [tenKhu, dsBan] of Object.entries(danhSachKhuVuc)) {
+                // Sắp xếp bàn theo tên cho đẹp mắt
+                dsBan.sort((a,b) => a.maBan.localeCompare(b.maBan));
 
-                khuVucDiv.innerHTML = `<div class="khu-vuc-title">${tenKhuVuc}</div>`;
+                let htmlKhu = `
+                        <div class="khu-vuc-box">
+                            <h3 class="khu-vuc-title">${tenKhu}</h3>
+                            <div class="table-grid">
+                    `;
 
-                const gridDiv = document.createElement('div');
-                gridDiv.className = 'grid-ban';
+                // 3. Vẽ các Bàn vào trong Khu Vực đó
+                dsBan.forEach(ban => {
+                  let statusClass = 'status-trong';
+                  let statusText = 'Trống';
 
-                danhSachBan.forEach(ban => {
-                  let classMau = 'ban-trong';
-                  let thaoTac = `chuyenSangGoiMon('${ban.maBan}')`; // Bàn trống thì sang Menu để order
-
-                  if(ban.status === 'Có khách') {
-                    classMau = 'ban-cokhach';
-                    thaoTac = `chuyenSangTinhTien('${ban.maBan}')`; // Bàn có khách thì sang Tính tiền
-                  } else if(ban.status === 'Đã đặt') {
-                    classMau = 'ban-dadat';
-                    thaoTac = `chuyenSangDatBan()`; // Bàn đã đặt thì sang ds đặt bàn xem ai đặt
+                  if (ban.status === 'Có khách') {
+                    statusClass = 'status-khach';
+                    statusText = 'Đang Phục Vụ';
+                  } else if (ban.status === 'Đã đặt') {
+                    statusClass = 'status-dat';
+                    statusText = 'Đã Đặt';
                   }
 
-                  gridDiv.innerHTML += `
-                            <div class="ban-card ${classMau}" onclick="${thaoTac}">
-                                <div class="ban-name">${ban.maBan}</div>
-                                <div class="ban-info">${ban.soGhe} ghế</div>
-                                <div style="font-size: 12px; margin-top: 5px;">${ban.status}</div>
+                  htmlKhu += `
+                            <div class="table-wrapper ${statusClass}" onclick="xuLyClickBan('${ban.maBan}', '${ban.status}')">
+                                <span class="so-ghe">${ban.soGhe} ghế</span>
+                                <div class="table-shape">
+                                    <span class="table-name">${ban.maBan}</span>
+                                </div>
+                                <span class="badge">${statusText}</span>
                             </div>
                         `;
                 });
 
-                khuVucDiv.appendChild(gridDiv);
-                container.appendChild(khuVucDiv);
-              });
+                htmlKhu += `</div></div>`;
+                container.innerHTML += htmlKhu; // Đổ khối khu vực vào màn hình
+              }
             })
             .catch(err => {
-              document.getElementById('soDoNhaHang').innerHTML = '<p style="color:red; text-align:center;">Lỗi tải sơ đồ bàn!</p>';
+              document.getElementById('soDoBanContainer').innerHTML = '<h3 style="text-align: center; color: red;">Lỗi kết nối Server! Vui lòng bật IntelliJ.</h3>';
             });
   }
 
-  // Các hàm điều hướng thông minh y hệt Nhahang.ai
-  function chuyenSangGoiMon(maBan) {
-    // Lưu tạm mã bàn vào localStorage để trang Menu biết order cho bàn nào
+  function xuLyClickBan(maBan, status) {
     localStorage.setItem('banDangChon', maBan);
-    window.location.href = "menugoimon.html";
-  }
 
-  function chuyenSangTinhTien(maBan) {
-    localStorage.setItem('banDangChon', maBan);
-    window.location.href = "maytinhtien.html";
-  }
-
-  function chuyenSangDatBan() {
-    window.location.href = "danhsachdatban.html";
+    if (status === 'Có khách') {
+      window.location.href = 'thanhtoan.html';
+    } else if (status === 'Đã đặt') {
+      alert(`Bàn ${maBan} đã được khách đặt trước! Vui lòng vào "Danh Sách Đặt Bàn" để làm thủ tục Nhận Bàn cho khách.`);
+    } else {
+      if (confirm(`Bàn ${maBan} đang trống. Mở menu để order món mới?`)) {
+        window.location.href = 'menugoimon.html';
+      }
+    }
   }
 </script>
 </body>

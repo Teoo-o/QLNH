@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Thực Đơn</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; }
+    .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 12px; text-align: center; vertical-align: middle;}
+    th { background-color: #34495e; color: white; }
+    img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+
+    .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; margin: 0 3px; transition: 0.2s;}
+    .btn-add { background-color: #27ae60; padding: 10px 20px;}
+    .btn-del { background-color: #e74c3c; }
+    .btn-restore { background-color: #f39c12; }
+    .btn-trash { background-color: #7f8c8d; padding: 10px 20px;}
+    .btn:hover { opacity: 0.8; transform: translateY(-2px);}
+
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
+    .modal-content { background-color: white; margin: 10% auto; padding: 20px; border-radius: 8px; width: 400px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333;}
+    .form-group input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h2 id="pageTitle">🍔 Quản Lý Menu Đang Bán</h2>
+    <div>
+      <button class="btn btn-trash" id="btnToggle" onclick="chuyenDoiCheDo()">🗑️ Xem Thùng Rác</button>
+      <button class="btn btn-add" id="btnAdd" onclick="moFormThem()">➕ Thêm Món Mới</button>
+      <a href="trangchu.html" style="text-decoration: none; padding: 10px 15px; background: #ecf0f1; color: #333; font-weight: bold; border-radius: 5px; margin-left: 10px;">🏠 Trang Chủ</a>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+    <tr>
+      <th style="width: 80px;">Hình Ảnh</th>
+      <th style="width: 100px;">Mã Món</th>
+      <th>Tên Món</th>
+      <th>Đơn Giá</th>
+      <th style="width: 150px;">Thao Tác</th>
+    </tr>
+    </thead>
+    <tbody id="menuBody"></tbody>
+  </table>
+</div>
+
+<div id="modalThem" class="modal">
+  <div class="modal-content">
+    <h3 id="modalTitle">Thêm Món Ăn Mới</h3>
+    <div class="form-group">
+      <label>Mã Món (VD: MA01):</label>
+      <input type="text" id="ipMaMon" placeholder="Nhập mã món...">
+    </div>
+    <div class="form-group">
+      <label>Tên Món:</label>
+      <input type="text" id="ipTenMon" placeholder="VD: Cơm rang dưa bò...">
+    </div>
+    <div class="form-group">
+      <label>Giá Bán (VNĐ):</label>
+      <input type="number" id="ipDonGia" placeholder="VD: 50000" min="0">
+    </div>
+    <div class="form-group">
+      <label>Link Hình Ảnh (URL):</label>
+      <input type="text" id="ipHinhAnh" placeholder="https://...">
+    </div>
+    <div style="text-align: right; margin-top: 20px;">
+      <button class="btn" style="background:#95a5a6;" onclick="document.getElementById('modalThem').style.display='none'">Hủy</button>
+      <button class="btn btn-add" onclick="luuMonAn()">💾 Lưu Lại</button>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script>
+  if(!localStorage.getItem('nhanVienDangNhap')) window.location.href = "dangnhap.html";
+
+  let isTrashMode = false; // Biến kiểm tra đang ở màn hình nào
+
+  window.onload = taiDanhSachMon;
+
+  function taiDanhSachMon() {
+    const endpoint = isTrashMode ? "/monan/thung-rac" : "/monan";
+
+    fetch(API_BASE_URL + endpoint)
+            .then(res => res.json())
+            .then(data => {
+              const tbody = document.getElementById('menuBody');
+              tbody.innerHTML = '';
+
+              if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5">Không có dữ liệu</td></tr>`;
+                return;
+              }
+
+              data.forEach(mon => {
+                const imgUrl = mon.hinhAnh || 'https://via.placeholder.com/60?text=Food';
+                const donGia = mon.donGia ? mon.donGia.toLocaleString('vi-VN') + ' ₫' : '0 ₫';
+
+                let actionHtml = '';
+                if(!isTrashMode) {
+                  actionHtml = `<button class="btn btn-del" onclick="xoaMon('${mon.maMon}')">🗑️ Ngừng bán</button>`;
+                } else {
+                  actionHtml = `<button class="btn btn-restore" onclick="khoiPhuc('${mon.maMon}')">♻️ Khôi phục</button>`;
+                }
+
+                tbody.innerHTML += `
+                        <tr style="${isTrashMode ? 'opacity: 0.7; background: #fdfdfd;' : ''}">
+                            <td><img src="${imgUrl}" alt="Món ăn"></td>
+                            <td><b>${mon.maMon}</b></td>
+                            <td style="text-align: left; padding-left: 20px; font-size: 16px;"><b>${mon.tenMon}</b></td>
+                            <td style="color: #27ae60; font-weight: bold;">${donGia}</td>
+                            <td>${actionHtml}</td>
+                        </tr>
+                    `;
+              });
+            });
+  }
+
+  function chuyenDoiCheDo() {
+    isTrashMode = !isTrashMode;
+    if(isTrashMode) {
+      document.getElementById('pageTitle').innerText = "🗑️ Thùng Rác (Món đã ngừng bán)";
+      document.getElementById('btnToggle').innerText = "🍔 Xem Menu Đang Bán";
+      document.getElementById('btnToggle').style.backgroundColor = "#3498db";
+      document.getElementById('btnAdd').style.display = "none";
+    } else {
+      document.getElementById('pageTitle').innerText = "🍔 Quản Lý Menu Đang Bán";
+      document.getElementById('btnToggle').innerText = "🗑️ Xem Thùng Rác";
+      document.getElementById('btnToggle').style.backgroundColor = "#7f8c8d";
+      document.getElementById('btnAdd').style.display = "inline-block";
+    }
+    taiDanhSachMon();
+  }
+
+  function moFormThem() {
+    document.getElementById('modalThem').style.display = 'block';
+    document.getElementById('ipMaMon').value = '';
+    document.getElementById('ipTenMon').value = '';
+    document.getElementById('ipDonGia').value = '';
+    document.getElementById('ipHinhAnh').value = '';
+  }
+
+  function luuMonAn() {
+    const payload = {
+      maMon: document.getElementById('ipMaMon').value.trim().toUpperCase(),
+      tenMon: document.getElementById('ipTenMon').value,
+      donGia: document.getElementById('ipDonGia').value,
+      hinhAnh: document.getElementById('ipHinhAnh').value
+    };
+
+    if(!payload.maMon || !payload.tenMon) {
+      alert("Mã món và Tên món không được để trống!"); return;
+    }
+
+    fetch(`${API_BASE_URL}/monan/tao-moi`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    }).then(async res => {
+      const data = await res.json();
+      if(res.ok) {
+        alert("✅ " + data.message);
+        document.getElementById('modalThem').style.display = 'none';
+        taiDanhSachMon();
+      } else {
+        alert("❌ " + data.message);
+      }
+    });
+  }
+
+  function xoaMon(maMon) {
+    if(confirm(`Xác nhận đưa món ${maMon} vào thùng rác (Ngừng bán)?`)) {
+      fetch(`${API_BASE_URL}/monan/xoa/${maMon}`, { method: 'DELETE' })
+              .then(res => res.json()).then(data => { alert("🗑️ " + data.message); taiDanhSachMon(); });
+    }
+  }
+
+  function khoiPhuc(maMon) {
+    fetch(`${API_BASE_URL}/monan/khoi-phuc/${maMon}`, { method: 'PUT' })
+            .then(res => res.json()).then(data => { alert("♻️ " + data.message); taiDanhSachMon(); });
+  }
+</script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 package com.nhahang.qlnh.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +13,7 @@ public class HdMa {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("maHD")
     @JoinColumn(name = "MaHD")
+    @JsonIgnore // <--- KHIÊN BẢO VỆ CHẶN VÒNG LẶP JSON LÀ Ở ĐÂY
     private HoaDon hoaDon;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -25,7 +27,7 @@ public class HdMa {
     @Column(name = "DonGiaBan")
     private Double donGiaBan;
 
-    // --- Vá toàn bộ lỗi "cannot find symbol method" ---
+    // --- Các hàm Get/Set của bạn giữ nguyên ---
     public HdMaKey getId() { return id; }
     public void setId(HdMaKey id) { this.id = id; }
 

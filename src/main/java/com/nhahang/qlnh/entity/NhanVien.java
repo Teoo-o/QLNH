@@ -23,7 +23,6 @@ public class NhanVien {
     @Column(name = "MatKhau")
     private String matKhau;
 
-    //Đánh dấu xóa mềm (Mặc định là false - Chưa xóa)
     @Column(name = "DaXoa")
     private Boolean daXoa = false;
 }
