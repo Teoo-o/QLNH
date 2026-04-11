@@ -18,13 +18,11 @@ public class KhuyenMaiController {
     @Autowired
     private KhuyenMaiRepository khuyenMaiRepository;
 
-    // 1. Lấy danh sách toàn bộ khuyến mãi
     @GetMapping
     public List<KhuyenMai> layDanhSach() {
         return khuyenMaiRepository.findAll();
     }
 
-    // 2. Thêm mới một mã khuyến mãi
     @PostMapping("/tao-moi")
     public ResponseEntity<?> taoMoi(@RequestBody KhuyenMai km) {
         try {
@@ -38,7 +36,6 @@ public class KhuyenMaiController {
         }
     }
 
-    // 3. Xóa mã khuyến mãi
     @DeleteMapping("/xoa/{maKM}")
     public ResponseEntity<?> xoaMa(@PathVariable String maKM) {
         if(khuyenMaiRepository.existsById(maKM)) {
@@ -48,11 +45,10 @@ public class KhuyenMaiController {
         return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Không tìm thấy mã này!"));
     }
 
-    // 4. API Dành cho trang Thanh Toán: Kiểm tra mã hợp lệ không?
     @GetMapping("/kiem-tra/{maKM}")
     public ResponseEntity<?> kiemTraMa(@PathVariable String maKM) {
         return khuyenMaiRepository.timMaHopLe(maKM, LocalDateTime.now())
-                .map(km -> ResponseEntity.ok(km)) // Hợp lệ -> Trả về thông tin KM để tính tiền
-                .orElse(ResponseEntity.badRequest().body(null)); // Không hợp lệ / Hết hạn
+                .map(km -> ResponseEntity.ok(km))
+                .orElse(ResponseEntity.badRequest().body(null));
     }
 }

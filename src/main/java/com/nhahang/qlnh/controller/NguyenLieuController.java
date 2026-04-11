@@ -17,13 +17,11 @@ public class NguyenLieuController {
     @Autowired
     private NguyenLieuRepository nguyenLieuRepository;
 
-    // 1. Xem danh sách tồn kho
     @GetMapping
     public List<NguyenLieu> xemKho() {
         return nguyenLieuRepository.findAll();
     }
 
-    // 2. Nhập thêm hàng vào kho (Xử lý tình huống hết hàng)
     @PutMapping("/nhap-them/{maNL}")
     public ResponseEntity<?> nhapThem(@PathVariable String maNL, @RequestBody Map<String, Double> payload) {
         return nguyenLieuRepository.findById(maNL).map(nl -> {

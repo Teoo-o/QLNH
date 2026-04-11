@@ -28,7 +28,6 @@ public class BanAnController {
     public List<BanAn> layDanhSachBan() {
         List<BanAn> danhSachBan;
         try {
-            // Lấy danh sách bàn chưa bị xóa mềm
             danhSachBan = banAnRepository.findByDaXoaFalse();
         } catch (Exception e) {
             danhSachBan = banAnRepository.findAll();
@@ -39,24 +38,20 @@ public class BanAnController {
         boolean coThayDoi = false;
 
         for (BanAn ban : danhSachBan) {
-            // Kiểm tra: Bàn này có khách đặt trong vòng 2 TIẾNG TỚI không?
             boolean sapCoKhachDat = tatCaPhieu.stream().anyMatch(p ->
                     "Chờ nhận bàn".equals(p.getTrangThai()) &&
                             p.getBanAn() != null &&
                             p.getBanAn().getMaBan().equals(ban.getMaBan()) &&
-                            p.getThoiGian().isBefore(now.plusHours(2)) && // Nhỏ hơn 2 tiếng tới
-                            p.getThoiGian().isAfter(now.minusMinutes(15)) // Chưa bị hệ thống hủy do lố 15 phút
+                            p.getThoiGian().isBefore(now.plusHours(2)) &&
+                            p.getThoiGian().isAfter(now.minusMinutes(15))
             );
 
             if (sapCoKhachDat) {
-                // CHỈ KHÓA BÀN KHI ĐANG TRỐNG
-                // Nếu bàn "Có khách", hệ thống kệ cho khách ăn xong thanh toán mới khóa
                 if ("Trống".equals(ban.getStatus()) || ban.getStatus() == null) {
                     ban.setStatus("Đã đặt");
                     coThayDoi = true;
                 }
             } else {
-                // Thời gian còn HƠN 2 TIẾNG -> Mở khóa để đón khách vãng lai
                 if ("Đã đặt".equals(ban.getStatus())) {
                     ban.setStatus("Trống");
                     coThayDoi = true;
@@ -64,7 +59,6 @@ public class BanAnController {
             }
         }
 
-        // Lưu đồng loạt nếu có bàn đổi màu
         if (coThayDoi) {
             banAnRepository.saveAll(danhSachBan);
         }

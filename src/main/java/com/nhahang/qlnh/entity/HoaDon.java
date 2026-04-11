@@ -24,7 +24,6 @@ public class HoaDon {
     @Column(name = "PTTT")
     private String pttt;
 
-    // --- CÁC CỘT MỚI ĐỂ LƯU KHUYẾN MÃI VÀ THÔNG TIN KHÁC ---
     @Column(name = "MaKM")
     private String maKM;
 

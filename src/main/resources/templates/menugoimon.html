@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu Gọi Món - Phục Vụ</title>
+    <title>Gọi Món - Phục Vụ</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; margin: 0; padding: 10px; height: 100vh; box-sizing: border-box;}
         .container { display: flex; gap: 15px; height: calc(100vh - 80px); max-width: 1400px; margin: 0 auto; }
@@ -41,7 +41,7 @@
 
 <div class="nav-bar">
     <a href="quanlyban.html" class="btn-home">⬅ QUAY LẠI SƠ ĐỒ BÀN</a>
-    <span style="font-size: 16px; font-weight: bold;">📝 ORDER GỌI MÓN - <span id="tenBanHienThi" style="color:#f1c40f;">Đang chọn...</span></span>
+    <span style="font-size: 16px; font-weight: bold;">📝GỌI MÓN - <span id="tenBanHienThi" style="color:#f1c40f;">Đang chọn...</span></span>
 </div>
 
 <div class="container">
@@ -53,14 +53,14 @@
     </div>
 
     <div class="cart-section">
-        <div class="cart-title">🛒 Phiếu Order</div>
+        <div class="cart-title">🛒 Phiếu Gọi Món</div>
         <div class="cart-list" id="gioHang">
         </div>
 
         <div class="cart-total">
             Tổng cộng: <br><span id="tongTien">0</span> ₫
         </div>
-        <button class="btn-order" id="btnChotOrder" disabled onclick="guiOrderXuongBep()">🔥 CHỐT ORDER & GỬI BẾP</button>
+        <button class="btn-order" id="btnChotOrder" disabled onclick="guiOrderXuongBep()">🔥 CHỐT MÓN & GỬI BẾP</button>
     </div>
 </div>
 
@@ -72,7 +72,7 @@
 
     window.onload = function() {
         if(!maBanDangChon) {
-            alert("Vui lòng chọn bàn từ Sơ đồ trước khi order!");
+            alert("Vui lòng chọn bàn từ sơ đồ trước khi gọi món!");
             window.location.href = "quanlyban.html";
             return;
         }

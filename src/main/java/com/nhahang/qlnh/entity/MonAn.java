@@ -1,14 +1,10 @@
 package com.nhahang.qlnh.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "MON_AN")
 public class MonAn {
-
     @Id
     @Column(name = "MaMon")
     private String maMon;
@@ -23,9 +19,12 @@ public class MonAn {
     private String hinhAnh;
 
     @Column(name = "DaXoa")
-    private Boolean daXoa; // Thêm cột quản lý Thùng Rác
+    private Boolean daXoa;
 
-    // --- GETTER & SETTER ---
+    @ManyToOne
+    @JoinColumn(name = "MaDM")
+    private DanhMuc danhMuc;
+
     public String getMaMon() { return maMon; }
     public void setMaMon(String maMon) { this.maMon = maMon; }
 
@@ -40,4 +39,7 @@ public class MonAn {
 
     public Boolean getDaXoa() { return daXoa; }
     public void setDaXoa(Boolean daXoa) { this.daXoa = daXoa; }
+
+    public DanhMuc getDanhMuc() { return danhMuc; }
+    public void setDanhMuc(DanhMuc danhMuc) { this.danhMuc = danhMuc; }
 }

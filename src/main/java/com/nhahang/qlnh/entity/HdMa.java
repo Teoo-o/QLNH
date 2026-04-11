@@ -13,7 +13,7 @@ public class HdMa {
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("maHD")
     @JoinColumn(name = "MaHD")
-    @JsonIgnore // <--- KHIÊN BẢO VỆ CHẶN VÒNG LẶP JSON LÀ Ở ĐÂY
+    @JsonIgnore
     private HoaDon hoaDon;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -27,7 +27,6 @@ public class HdMa {
     @Column(name = "DonGiaBan")
     private Double donGiaBan;
 
-    // --- Các hàm Get/Set của bạn giữ nguyên ---
     public HdMaKey getId() { return id; }
     public void setId(HdMaKey id) { this.id = id; }
 

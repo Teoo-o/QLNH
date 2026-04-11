@@ -22,7 +22,6 @@ public class HoaDonController {
     @Autowired private NguyenLieuRepository nguyenLieuRepository;
     @Autowired private MaNlRepository maNlRepository;
 
-    // 1. TẠO HÓA ĐƠN HOẶC GỌI THÊM MÓN
     @PostMapping("/tao-moi")
     @Transactional
     public ResponseEntity<?> taoHoaDon(@RequestBody Map<String, Object> payload) {
@@ -84,7 +83,6 @@ public class HoaDonController {
         }
     }
 
-    // 2. MỞ BÀN ĐỎ LẤY HÓA ĐƠN RA TÍNH TIỀN
     @GetMapping("/ban/{maBan}/chua-thanh-toan")
     public ResponseEntity<?> getHoaDonChuaThanhToan(@PathVariable String maBan) {
         List<HoaDon> listHD = hoaDonRepository.findByBanAn_MaBanAndPttt(maBan, "Chưa thanh toán");
@@ -121,7 +119,6 @@ public class HoaDonController {
         return ResponseEntity.ok(response);
     }
 
-    // 3. XÁC NHẬN THU TIỀN (ĐÃ TÍCH HỢP LƯU KHUYẾN MÃI)
     @PutMapping("/thanh-toan")
     @Transactional
     public ResponseEntity<?> thanhToan(@RequestBody Map<String, Object> payload) {
@@ -130,7 +127,6 @@ public class HoaDonController {
             String maBan = (String) payload.get("maBan");
             String pttt = (String) payload.get("pttt");
 
-            // Lấy thông tin Khuyến mãi gửi từ Web xuống
             String maKM = (String) payload.get("maKM");
             Double soTienGiam = payload.get("soTienGiam") != null ? Double.parseDouble(payload.get("soTienGiam").toString()) : 0.0;
 
@@ -139,10 +135,9 @@ public class HoaDonController {
 
             hd.setPttt(pttt);
             hd.setMaKM(maKM);
-            hd.setSoTienGiam(soTienGiam); // Lưu số tiền được giảm vào Database
+            hd.setSoTienGiam(soTienGiam);
             hoaDonRepository.save(hd);
 
-            // Xóa khách khỏi bàn
             if (maBan != null) {
                 BanAn ban = banAnRepository.findById(maBan).orElse(null);
                 if (ban != null) {
@@ -151,7 +146,6 @@ public class HoaDonController {
                 }
             }
 
-            // TRỪ KHO TỰ ĐỘNG
             List<HdMa> chiTietList = hdMaRepository.findByHoaDon_MaHD(maHD);
             for (HdMa chiTiet : chiTietList) {
                 String maMon = chiTiet.getMonAn().getMaMon();

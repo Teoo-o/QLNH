@@ -81,7 +81,6 @@ public class PhieuDatBanController {
                     }
                     pd.setBanAn(ban);
 
-                    // CHỈ KHÓA BÀN NẾU THỜI GIAN ĐẶT DƯỚI 2 TIẾNG TÍNH TỪ BÂY GIỜ
                     if (pd.getThoiGian().isBefore(LocalDateTime.now().plusHours(2))) {
                         if ("Trống".equals(ban.getStatus()) || ban.getStatus() == null) {
                             ban.setStatus("Đã đặt");

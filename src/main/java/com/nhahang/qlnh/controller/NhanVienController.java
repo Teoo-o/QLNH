@@ -20,7 +20,6 @@ public class NhanVienController {
     @Autowired
     private NhanVienRepository nhanVienRepository;
 
-    // 1. Đăng nhập (Chỉ cho phép nhân viên chưa bị xóa đăng nhập)
     @PostMapping("/login")
     public ResponseEntity<?> dangNhap(@RequestBody Map<String, String> loginData) {
         String taiKhoan = loginData.get("taiKhoan");
@@ -33,7 +32,6 @@ public class NhanVienController {
         return ResponseEntity.status(401).body("Sai tài khoản, mật khẩu hoặc tài khoản đã bị vô hiệu hóa!");
     }
 
-    // 2. Lấy danh sách nhân viên đang hoạt động
     @GetMapping
     public ResponseEntity<List<Map<String, Object>>> getAllActive() {
         List<Map<String, Object>> dsAnToan = nhanVienRepository.findByDaXoaFalse().stream()
@@ -48,7 +46,6 @@ public class NhanVienController {
         return ResponseEntity.ok(dsAnToan);
     }
 
-    // 3. Lấy danh sách nhân viên trong Thùng Rác
     @GetMapping("/trash")
     public ResponseEntity<List<Map<String, Object>>> getTrash() {
         List<Map<String, Object>> dsThungRac = nhanVienRepository.findByDaXoaTrue().stream()
@@ -63,22 +60,16 @@ public class NhanVienController {
         return ResponseEntity.ok(dsThungRac);
     }
 
-    // 4. THÊM NHÂN VIÊN MỚI (BẢN PRO: Xử lý tái chế mã từ Thùng rác)
     @PostMapping
     public ResponseEntity<?> add(@RequestBody NhanVien nvMoi) {
         Optional<NhanVien> nvCu = nhanVienRepository.findById(nvMoi.getMaNV());
 
-        // KỊCH BẢN 1: Mã NV đã tồn tại trong hệ thống
         if (nvCu.isPresent()) {
             NhanVien tonTai = nvCu.get();
 
             if (!tonTai.getDaXoa()) {
-                // Đang hoạt động -> Chặn lại
                 return ResponseEntity.badRequest().body("Mã nhân viên này đang có người sử dụng!");
             } else {
-                // Đang trong thùng rác -> Tái chế (Ghi đè thông tin người mới vào xác người cũ)
-
-                // Phải kiểm tra xem cái Tên Đăng Nhập mới nhập vào có bị trùng với ai khác không
                 if (!tonTai.getTaiKhoan().equals(nvMoi.getTaiKhoan()) && nhanVienRepository.existsByTaiKhoan(nvMoi.getTaiKhoan())) {
                     return ResponseEntity.badRequest().body("Tên tài khoản này đã có người sử dụng!");
                 }
@@ -87,14 +78,13 @@ public class NhanVienController {
                 tonTai.setChucVu(nvMoi.getChucVu());
                 tonTai.setTaiKhoan(nvMoi.getTaiKhoan());
                 tonTai.setMatKhau(nvMoi.getMatKhau());
-                tonTai.setDaXoa(false); // Hồi sinh
+                tonTai.setDaXoa(false);
 
                 nhanVienRepository.save(tonTai);
                 return ResponseEntity.ok("Mã NV này từng nằm trong thùng rác. Hệ thống đã tái sử dụng và thêm người mới thành công!");
             }
         }
 
-        // KỊCH BẢN 2: Mã NV hoàn toàn mới
         if (nhanVienRepository.existsByTaiKhoan(nvMoi.getTaiKhoan())) {
             return ResponseEntity.badRequest().body("Tên tài khoản này đã có người sử dụng!");
         }
@@ -104,14 +94,12 @@ public class NhanVienController {
         return ResponseEntity.ok("Thêm nhân viên mới thành công!");
     }
 
-    // 5. Sửa thông tin
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable String id, @RequestBody NhanVien nvMoi) {
         return nhanVienRepository.findById(id).map(nv -> {
             nv.setTenNV(nvMoi.getTenNV());
             nv.setChucVu(nvMoi.getChucVu());
 
-            // Bắt lỗi đổi sang tên tài khoản của người khác
             if (!nv.getTaiKhoan().equals(nvMoi.getTaiKhoan()) && nhanVienRepository.existsByTaiKhoan(nvMoi.getTaiKhoan())) {
                 throw new RuntimeException("Tên đăng nhập này đã bị trùng với người khác!");
             }
@@ -125,7 +113,6 @@ public class NhanVienController {
         }).orElse(ResponseEntity.badRequest().body("Không tìm thấy nhân viên cần sửa!"));
     }
 
-    // 6. Xóa mềm (Đưa vào Thùng Rác)
     @DeleteMapping("/{id}")
     public ResponseEntity<?> softDelete(@PathVariable String id) {
         return nhanVienRepository.findById(id).map(nv -> {
@@ -135,7 +122,6 @@ public class NhanVienController {
         }).orElse(ResponseEntity.badRequest().body("Không tìm thấy nhân viên!"));
     }
 
-    // 7. Khôi phục từ Thùng Rác
     @PutMapping("/restore/{id}")
     public ResponseEntity<?> restore(@PathVariable String id) {
         return nhanVienRepository.findById(id).map(nv -> {
