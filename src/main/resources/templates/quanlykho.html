@@ -9,16 +9,13 @@
         .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
         .header h2 { margin: 0; color: #2c3e50; }
-
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background-color: #34495e; color: white; }
         tr:hover { background-color: #f1f1f1; }
-
         .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; transition: 0.2s; }
         .btn-nhap { background-color: #3498db; }
         .btn-home { background-color: #ecf0f1; color: #333; text-decoration: none; padding: 10px 15px; border-radius: 5px; font-weight: bold;}
-
         .status-het { color: #e74c3c; font-weight: bold; background: #fdedec; padding: 5px 10px; border-radius: 20px; font-size: 13px; }
         .status-con { color: #27ae60; font-weight: bold; background: #e8f6f3; padding: 5px 10px; border-radius: 20px; font-size: 13px; }
     </style>
@@ -50,16 +47,12 @@
 
 <script src="config.js"></script>
 <script>
-    // --- PHẦN BẢO VỆ (SECURITY CHECK) ĐÃ SỬA ---
     const userStr = localStorage.getItem('nhanVienDangNhap');
     if(!userStr) {
         window.location.href = "dangnhap.html";
     } else {
         const user = JSON.parse(userStr);
         const chucVu = user.chucVu.toLowerCase().trim();
-
-        // CHỈ CHO PHÉP: Admin, Quản lý, Bếp trưởng.
-        // ĐẦU BẾP SẼ BỊ ĐUỔI RA KHỎI ĐÂY!
         if(chucVu !== 'admin' && chucVu !== 'quản lý' && chucVu !== 'bếp trưởng') {
             alert("⛔ QUYỀN TRUY CẬP BỊ TỪ CHỐI!\nChỉ có Quản lý hoặc Bếp trưởng mới được vào khu vực Kho.");
             window.location.href = "trangchu.html";
@@ -74,17 +67,18 @@
             .then(data => {
                 const tbody = document.getElementById('khoBody');
                 tbody.innerHTML = '';
-
                 data.forEach(nl => {
                     const statusHTML = nl.sl <= 0
                         ? '<span class="status-het">Hết hàng</span>'
                         : '<span class="status-con">Còn hàng</span>';
 
+                    const slDinhDang = Number(nl.sl.toFixed(2)).toLocaleString('vi-VN');
+
                     tbody.innerHTML += `
                         <tr>
                             <td><b>${nl.maNL}</b></td>
                             <td style="text-align: left; padding-left: 20px;">${nl.tenNL}</td>
-                            <td style="font-weight: bold; font-size: 16px;">${nl.sl}</td>
+                            <td style="font-weight: bold; font-size: 16px;">${slDinhDang}</td>
                             <td>${nl.donViTinh || 'Kg'}</td>
                             <td>${statusHTML}</td>
                             <td>

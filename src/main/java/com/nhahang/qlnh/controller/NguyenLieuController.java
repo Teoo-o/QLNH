@@ -30,7 +30,8 @@ public class NguyenLieuController {
                 return ResponseEntity.badRequest().body("Số lượng nhập phải lớn hơn 0!");
             }
 
-            nl.setSl(nl.getSl() + soLuongThem);
+            double slTong = nl.getSl() + soLuongThem;
+            nl.setSl(Math.round(slTong * 100.0) / 100.0);
             nguyenLieuRepository.save(nl);
 
             return ResponseEntity.ok("✅ Đã nhập thành công " + soLuongThem + " " + nl.getDonViTinh() + " [" + nl.getTenNL() + "] vào kho!");

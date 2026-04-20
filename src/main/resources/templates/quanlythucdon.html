@@ -8,23 +8,28 @@
     body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: #f0f2f5; padding: 20px; margin: 0; }
     .container { max-width: 1000px; margin: 0 auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+
+    .category-section { margin-bottom: 30px; }
+    .category-title { background-color: #2c3e50; color: white; padding: 10px 15px; border-radius: 8px 8px 0 0; margin: 0; font-size: 18px; display: flex; justify-content: space-between; align-items: center;}
+
+    table { width: 100%; border-collapse: collapse; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     th, td { border: 1px solid #ddd; padding: 12px; text-align: center; vertical-align: middle;}
-    th { background-color: #34495e; color: white; }
+    th { background-color: #ecf0f1; color: #2c3e50; }
     img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
 
     .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; color: white; font-weight: bold; margin: 0 3px; transition: 0.2s;}
     .btn-add { background-color: #27ae60; padding: 10px 20px;}
+    .btn-edit { background-color: #3498db; }
     .btn-del { background-color: #e74c3c; }
     .btn-restore { background-color: #f39c12; }
     .btn-trash { background-color: #7f8c8d; padding: 10px 20px;}
     .btn:hover { opacity: 0.8; transform: translateY(-2px);}
 
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); }
-    .modal-content { background-color: white; margin: 10% auto; padding: 20px; border-radius: 8px; width: 400px; }
+    .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 8px; width: 400px; }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #333;}
-    .form-group input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+    .form-group input, .form-group select { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
   </style>
 </head>
 <body>
@@ -39,39 +44,22 @@
     </div>
   </div>
 
-  <table>
-    <thead>
-    <tr>
-      <th style="width: 80px;">Hình Ảnh</th>
-      <th style="width: 100px;">Mã Món</th>
-      <th>Tên Món</th>
-      <th>Đơn Giá</th>
-      <th style="width: 150px;">Thao Tác</th>
-    </tr>
-    </thead>
-    <tbody id="menuBody"></tbody>
-  </table>
+  <div id="menuContainer">
+    <h3 style="text-align: center; color: #7f8c8d;">Đang tải thực đơn...</h3>
+  </div>
 </div>
 
 <div id="modalThem" class="modal">
   <div class="modal-content">
     <h3 id="modalTitle">Thêm Món Ăn Mới</h3>
+    <div class="form-group"><label>Mã Món:</label><input type="text" id="ipMaMon" placeholder="VD: M01"></div>
+    <div class="form-group"><label>Tên Món:</label><input type="text" id="ipTenMon" placeholder="VD: Cơm rang dưa bò"></div>
     <div class="form-group">
-      <label>Mã Món (VD: MA01):</label>
-      <input type="text" id="ipMaMon" placeholder="Nhập mã món...">
+      <label>Danh Mục:</label>
+      <select id="ipDanhMuc"><option value="">-- Đang tải --</option></select>
     </div>
-    <div class="form-group">
-      <label>Tên Món:</label>
-      <input type="text" id="ipTenMon" placeholder="VD: Cơm rang dưa bò...">
-    </div>
-    <div class="form-group">
-      <label>Giá Bán (VNĐ):</label>
-      <input type="number" id="ipDonGia" placeholder="VD: 50000" min="0">
-    </div>
-    <div class="form-group">
-      <label>Link Hình Ảnh (URL):</label>
-      <input type="text" id="ipHinhAnh" placeholder="https://...">
-    </div>
+    <div class="form-group"><label>Giá Bán (VNĐ):</label><input type="text" id="ipDonGia" placeholder="VD: 50000" min="0"></div>
+    <div class="form-group"><label>Link Hình Ảnh:</label><input type="text" id="ipHinhAnh" placeholder="VD: /images/m01.jpg"></div>
     <div style="text-align: right; margin-top: 20px;">
       <button class="btn" style="background:#95a5a6;" onclick="document.getElementById('modalThem').style.display='none'">Hủy</button>
       <button class="btn btn-add" onclick="luuMonAn()">💾 Lưu Lại</button>
@@ -83,9 +71,32 @@
 <script>
   if(!localStorage.getItem('nhanVienDangNhap')) window.location.href = "dangnhap.html";
 
-  let isTrashMode = false; // Biến kiểm tra đang ở màn hình nào
+  let isTrashMode = false;
+  let currentEditId = null; // Biến lưu mã món khi đang ở chế độ Sửa
 
-  window.onload = taiDanhSachMon;
+  // Hàm xác định mức độ ưu tiên để sắp xếp bảng
+  function getTrongSo(tenDM) {
+    if(!tenDM) return 5;
+    let t = tenDM.toLowerCase();
+    if(t.includes('khai')) return 1;
+    if(t.includes('bún') || t.includes('phở') || t.includes('bun') || t.includes('pho')) return 2;
+    if(t.includes('cơm') || t.includes('com')) return 3;
+    if(t.includes('uống') || t.includes('tráng') || t.includes('uong')) return 4;
+    return 5;
+  }
+
+  window.onload = function() {
+    taiDanhSachMon();
+    taiDanhMucVaoDropdown();
+  };
+
+  function taiDanhMucVaoDropdown() {
+    fetch(`${API_BASE_URL}/danhmuc`).then(res => res.json()).then(data => {
+      const select = document.getElementById('ipDanhMuc');
+      select.innerHTML = '<option value="">-- Chưa phân loại --</option>';
+      data.forEach(dm => { select.innerHTML += `<option value="${dm.maDM}">${dm.tenDM}</option>`; });
+    });
+  }
 
   function taiDanhSachMon() {
     const endpoint = isTrashMode ? "/monan/thung-rac" : "/monan";
@@ -93,76 +104,121 @@
     fetch(API_BASE_URL + endpoint)
             .then(res => res.json())
             .then(data => {
-              const tbody = document.getElementById('menuBody');
-              tbody.innerHTML = '';
+              const container = document.getElementById('menuContainer');
+              container.innerHTML = '';
 
               if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5">Không có dữ liệu</td></tr>`;
+                container.innerHTML = `<h3 style="text-align:center; color:#e74c3c;">Không có dữ liệu</h3>`;
                 return;
               }
 
+              // Gom nhóm theo Danh Mục
+              const groups = {};
               data.forEach(mon => {
-                const imgUrl = mon.hinhAnh || 'https://via.placeholder.com/60?text=Food';
-                const donGia = mon.donGia ? mon.donGia.toLocaleString('vi-VN') + ' ₫' : '0 ₫';
+                const catName = mon.danhMuc ? mon.danhMuc.tenDM.trim() : 'Khác';
+                if (!groups[catName]) groups[catName] = [];
+                groups[catName].push(mon);
+              });
 
-                let actionHtml = '';
-                if(!isTrashMode) {
-                  actionHtml = `<button class="btn btn-del" onclick="xoaMon('${mon.maMon}')">🗑️ Ngừng bán</button>`;
-                } else {
-                  actionHtml = `<button class="btn btn-restore" onclick="khoiPhuc('${mon.maMon}')">♻️ Khôi phục</button>`;
-                }
+              // Sắp xếp các danh mục theo trọng số
+              const sortedKeys = Object.keys(groups).sort((a, b) => getTrongSo(a) - getTrongSo(b));
 
-                tbody.innerHTML += `
-                        <tr style="${isTrashMode ? 'opacity: 0.7; background: #fdfdfd;' : ''}">
-                            <td><img src="${imgUrl}" alt="Món ăn"></td>
+              // Vẽ từng bảng
+              sortedKeys.forEach(cat => {
+                let dsMon = groups[cat];
+                let html = `
+            <div class="category-section">
+                <h3 class="category-title"><span>🍽️ ${cat}</span> <span style="font-size:14px; background:#34495e; padding:3px 10px; border-radius:12px;">${dsMon.length} món</span></h3>
+                <table>
+                    <thead><tr><th style="width:80px;">Hình Ảnh</th><th style="width:100px;">Mã Món</th><th>Tên Món</th><th>Đơn Giá</th><th style="width:200px;">Thao Tác</th></tr></thead>
+                    <tbody>`;
+
+                dsMon.forEach(mon => {
+                  const imgUrl = mon.hinhAnh || 'https://via.placeholder.com/60?text=Food';
+                  const donGia = mon.donGia ? mon.donGia.toLocaleString('vi-VN') + ' ₫' : '0 ₫';
+                  const maDM = mon.danhMuc ? mon.danhMuc.maDM : '';
+
+                  // Tránh lỗi khi tên món có dấu nháy đơn
+                  const safeTen = mon.tenMon.replace(/'/g, "\\'");
+                  const safeImg = imgUrl.replace(/'/g, "\\'");
+
+                  let actionHtml = isTrashMode
+                          ? `<button class="btn btn-restore" onclick="khoiPhuc('${mon.maMon}')">♻️ Khôi phục</button>`
+                          : `<button class="btn btn-edit" onclick="moFormSua('${mon.maMon}', '${safeTen}', '${maDM}', ${mon.donGia || 0}, '${safeImg}')">✏️ Sửa</button>
+                       <button class="btn btn-del" onclick="xoaMon('${mon.maMon}')">🗑️ Ngừng bán</button>`;
+
+                  html += `<tr style="${isTrashMode ? 'opacity: 0.7; background: #fdfdfd;' : ''}">
+                            <td><img src="${imgUrl}" alt="Món ăn" onerror="this.src='https://via.placeholder.com/60?text=Loi+Anh'"></td>
                             <td><b>${mon.maMon}</b></td>
                             <td style="text-align: left; padding-left: 20px; font-size: 16px;"><b>${mon.tenMon}</b></td>
                             <td style="color: #27ae60; font-weight: bold;">${donGia}</td>
                             <td>${actionHtml}</td>
-                        </tr>
-                    `;
+                        </tr>`;
+                });
+                html += `</tbody></table></div>`;
+                container.innerHTML += html;
               });
             });
   }
 
   function chuyenDoiCheDo() {
     isTrashMode = !isTrashMode;
-    if(isTrashMode) {
-      document.getElementById('pageTitle').innerText = "🗑️ Thùng Rác (Món đã ngừng bán)";
-      document.getElementById('btnToggle').innerText = "🍔 Xem Menu Đang Bán";
-      document.getElementById('btnToggle').style.backgroundColor = "#3498db";
-      document.getElementById('btnAdd').style.display = "none";
-    } else {
-      document.getElementById('pageTitle').innerText = "🍔 Quản Lý Menu Đang Bán";
-      document.getElementById('btnToggle').innerText = "🗑️ Xem Thùng Rác";
-      document.getElementById('btnToggle').style.backgroundColor = "#7f8c8d";
-      document.getElementById('btnAdd').style.display = "inline-block";
-    }
+    document.getElementById('pageTitle').innerText = isTrashMode ? "🗑️ Thùng Rác (Món đã ngừng bán)" : "🍔 Quản Lý Menu Đang Bán";
+    document.getElementById('btnToggle').innerText = isTrashMode ? "🍔 Xem Menu Đang Bán" : "🗑️ Xem Thùng Rác";
+    document.getElementById('btnToggle').style.backgroundColor = isTrashMode ? "#3498db" : "#7f8c8d";
+    document.getElementById('btnAdd').style.display = isTrashMode ? "none" : "inline-block";
     taiDanhSachMon();
   }
 
   function moFormThem() {
-    document.getElementById('modalThem').style.display = 'block';
+    currentEditId = null; // Đặt về null để hệ thống hiểu là đang Thêm mới
+    document.getElementById('modalTitle').innerText = "Thêm Món Ăn Mới";
     document.getElementById('ipMaMon').value = '';
+    document.getElementById('ipMaMon').disabled = false; // Cho phép nhập mã
     document.getElementById('ipTenMon').value = '';
+    document.getElementById('ipDanhMuc').value = '';
     document.getElementById('ipDonGia').value = '';
     document.getElementById('ipHinhAnh').value = '';
+    document.getElementById('modalThem').style.display = 'block';
+  }
+
+  function moFormSua(maMon, tenMon, maDM, donGia, hinhAnh) {
+    currentEditId = maMon; // Lưu lại mã món đang sửa
+    document.getElementById('modalTitle').innerText = "Chỉnh Sửa Món Ăn";
+    document.getElementById('ipMaMon').value = maMon;
+    document.getElementById('ipMaMon').disabled = true; // Khóa không cho sửa mã
+    document.getElementById('ipTenMon').value = tenMon;
+    document.getElementById('ipDanhMuc').value = maDM;
+    document.getElementById('ipDonGia').value = donGia;
+
+    // Nếu là ảnh mặc định thì để trống ô nhập
+    if (hinhAnh.includes('via.placeholder.com')) {
+      document.getElementById('ipHinhAnh').value = '';
+    } else {
+      document.getElementById('ipHinhAnh').value = hinhAnh;
+    }
+
+    document.getElementById('modalThem').style.display = 'block';
   }
 
   function luuMonAn() {
+    const selectedMaDM = document.getElementById('ipDanhMuc').value;
     const payload = {
       maMon: document.getElementById('ipMaMon').value.trim().toUpperCase(),
       tenMon: document.getElementById('ipTenMon').value,
-      donGia: document.getElementById('ipDonGia').value,
-      hinhAnh: document.getElementById('ipHinhAnh').value
+      donGia: document.getElementById('ipDonGia').value || 0,
+      hinhAnh: document.getElementById('ipHinhAnh').value,
+      danhMuc: selectedMaDM ? { maDM: selectedMaDM } : null
     };
 
-    if(!payload.maMon || !payload.tenMon) {
-      alert("Mã món và Tên món không được để trống!"); return;
-    }
+    if(!payload.maMon || !payload.tenMon) { alert("Mã và Tên món không được trống!"); return; }
 
-    fetch(`${API_BASE_URL}/monan/tao-moi`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+    // Tự động phân luồng: Nếu có currentEditId thì gọi PUT (Sửa), nếu không thì gọi POST (Thêm)
+    const url = currentEditId ? `${API_BASE_URL}/monan/sua/${currentEditId}` : `${API_BASE_URL}/monan/tao-moi`;
+    const method = currentEditId ? 'PUT' : 'POST';
+
+    fetch(url, {
+      method: method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
     }).then(async res => {
       const data = await res.json();
       if(res.ok) {
@@ -172,19 +228,17 @@
       } else {
         alert("❌ " + data.message);
       }
-    });
+    }).catch(err => alert("Lỗi kết nối đến máy chủ!"));
   }
 
   function xoaMon(maMon) {
     if(confirm(`Xác nhận đưa món ${maMon} vào thùng rác (Ngừng bán)?`)) {
-      fetch(`${API_BASE_URL}/monan/xoa/${maMon}`, { method: 'DELETE' })
-              .then(res => res.json()).then(data => { alert("🗑️ " + data.message); taiDanhSachMon(); });
+      fetch(`${API_BASE_URL}/monan/xoa/${maMon}`, { method: 'DELETE' }).then(res => res.json()).then(data => { alert("🗑️ " + data.message); taiDanhSachMon(); });
     }
   }
 
   function khoiPhuc(maMon) {
-    fetch(`${API_BASE_URL}/monan/khoi-phuc/${maMon}`, { method: 'PUT' })
-            .then(res => res.json()).then(data => { alert("♻️ " + data.message); taiDanhSachMon(); });
+    fetch(`${API_BASE_URL}/monan/khoi-phuc/${maMon}`, { method: 'PUT' }).then(res => res.json()).then(data => { alert("♻️ " + data.message); taiDanhSachMon(); });
   }
 </script>
 </body>

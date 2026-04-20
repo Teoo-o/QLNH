@@ -19,7 +19,7 @@
         .btn { padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; color: white; font-weight: bold; font-size: 16px; transition: 0.2s;}
         .btn-back { background-color: #95a5a6; }
         .btn-order { background-color: #3498db; }
-        .btn-print { background-color: #34495e; } /* Nút In */
+        .btn-print { background-color: #34495e; }
         .btn-pay { background-color: #e67e22; }
         .btn-km { background-color: #9b59b6; padding: 8px 15px; font-size: 14px; border-radius: 5px; margin-left: 10px;}
         .btn:hover { opacity: 0.8; transform: translateY(-2px); }
@@ -69,7 +69,8 @@
 
     <div class="btn-group">
         <button class="btn btn-order" onclick="window.location.href='menugoimon.html'">➕ Gọi Thêm Món</button>
-        <button class="btn btn-print" onclick="inHoaDon()">🖨️ In Hóa Đơn</button> <button class="btn btn-pay" onclick="chotThanhToan()">💵 Thanh Toán</button>
+        <button class="btn btn-print" onclick="inHoaDon()">🖨️ In Hóa Đơn</button>
+        <button class="btn btn-pay" onclick="chotThanhToan()">💵 Thu Tiền & Kết Thúc</button>
     </div>
 </div>
 
@@ -78,7 +79,7 @@
     let maBan = localStorage.getItem('banDangChon');
     let maHoaDonHienTai = null;
     let tongTienGoc = 0, phanTramGiam = 0, maKMHienTai = null;
-    let dsMonAnDeIn = []; // Lưu lại danh sách để in
+    let dsMonAnDeIn = [];
 
     if(!localStorage.getItem('nhanVienDangNhap')) window.location.href = "dangnhap.html";
 
@@ -95,18 +96,15 @@
                 maHoaDonHienTai = data.maHD;
                 document.getElementById('maHDTxt').innerText = `Mã HĐ: ${data.maHD}`;
                 document.getElementById('thoiGianTxt').innerText = `Giờ vào: ${new Date(data.ngayTao).toLocaleString('vi-VN')}`;
-
                 const tbody = document.getElementById('chiTietBody');
                 tbody.innerHTML = '';
                 tongTienGoc = 0;
-                dsMonAnDeIn = data.chiTietList; // Lưu trữ để In
-
+                dsMonAnDeIn = data.chiTietList;
                 data.chiTietList.forEach((item, index) => {
                     const gia = item.donGia || item.donGiaBan || 0;
                     const sl = item.sl || 0;
-                    const tt = gia * sl;
+                    const tt = Math.round(gia * sl);
                     tongTienGoc += tt;
-
                     tbody.innerHTML += `
                         <tr>
                             <td>${index + 1}</td>
@@ -137,56 +135,56 @@
     }
 
     function capNhatTien() {
-        const soTienGiam = tongTienGoc * (phanTramGiam / 100);
+        const soTienGiam = Math.round(tongTienGoc * (phanTramGiam / 100));
+        const thanhToan = tongTienGoc - soTienGiam;
         document.getElementById('tienMonTxt').innerText = tongTienGoc.toLocaleString() + ' ₫';
         document.getElementById('phanTramTxt').innerText = phanTramGiam;
         document.getElementById('tienGiamTxt').innerText = "- " + soTienGiam.toLocaleString() + ' ₫';
-        document.getElementById('tienKhachTraTxt').innerText = (tongTienGoc - soTienGiam).toLocaleString() + ' ₫';
+        document.getElementById('tienKhachTraTxt').innerText = thanhToan.toLocaleString() + ' ₫';
     }
 
-    // --- HÀM TẠO VÀ IN HÓA ĐƠN ---
     function inHoaDon() {
         if(!maHoaDonHienTai || dsMonAnDeIn.length === 0) {
             alert("Hóa đơn trống!"); return;
         }
-
-        const tienGiam = tongTienGoc * (phanTramGiam / 100);
-        const thanhToan = tongTienGoc - tienGiam;
+        const soTienGiam = Math.round(tongTienGoc * (phanTramGiam / 100));
+        const thanhToan = tongTienGoc - soTienGiam;
         const printWindow = window.open('', '_blank', 'width=400,height=600');
-
         let chiTietHTML = '';
         dsMonAnDeIn.forEach(item => {
             const gia = item.donGia || item.donGiaBan || 0;
             const sl = item.sl || 0;
             chiTietHTML += `
                 <tr>
-                    <td style="text-align: left;">${item.monAn.tenMon}</td>
+                    <td class="col-name">${item.monAn.tenMon}</td>
                     <td style="text-align: center;">${sl}</td>
-                    <td style="text-align: right;">${(gia * sl).toLocaleString()}</td>
+                    <td style="text-align: right;">${Math.round(gia * sl).toLocaleString()}</td>
                 </tr>
             `;
         });
-
         const html = `
+            <!DOCTYPE html>
             <html>
             <head>
+                <title>Hóa_Đơn_${maHoaDonHienTai}</title>
                 <style>
-                    body { font-family: monospace; width: 100%; margin: 0; padding: 10px; font-size: 14px;}
+                    @page { size: 80mm auto; margin: 0mm; }
+                    body { font-family: 'Courier New', Courier, monospace; width: 72mm; margin: 0 auto; padding: 4mm; font-size: 14px; color: #000; }
                     .center { text-align: center; }
-                    .bold { font-weight: bold; }
                     .line { border-bottom: 1px dashed #000; margin: 10px 0; }
                     table { width: 100%; border-collapse: collapse; margin-top: 10px;}
-                    td, th { padding: 4px 0; border-bottom: 1px dotted #ccc; }
+                    td, th { padding: 5px 0; border-bottom: 1px dotted #ccc; vertical-align: top; }
+                    .col-name { word-break: break-word; white-space: normal; text-align: left; padding-right: 5px; }
                 </style>
             </head>
             <body>
-                <h2 class="center">NHÀ HÀNG ẨM THỰC</h2>
-                <div class="center">ĐC: 123 Phố Ẩm Thực, Hà Nội</div>
+                <h2 class="center" style="font-size: 20px; margin-bottom: 5px;">NHÀ HÀNG ẨM THỰC</h2>
+                <div class="center">ĐC: Đại học Thủ đô Hà Nội</div>
                 <div class="center">SĐT: 0988.888.888</div>
                 <div class="line"></div>
                 <div><b>Mã HĐ:</b> ${maHoaDonHienTai}</div>
                 <div><b>Bàn:</b> ${maBan}</div>
-                <div><b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}</div>
+                <div><b>Giờ in:</b> ${new Date().toLocaleString('vi-VN')}</div>
                 <div class="line"></div>
                 <table>
                     <tr><th style="text-align:left">Tên Món</th><th>SL</th><th style="text-align:right">T.Tiền</th></tr>
@@ -194,30 +192,27 @@
                 </table>
                 <div class="line"></div>
                 <div style="display:flex; justify-content:space-between;"><span>Cộng tiền hàng:</span> <span>${tongTienGoc.toLocaleString()}</span></div>
-                <div style="display:flex; justify-content:space-between;"><span>Khuyến mãi (${phanTramGiam}%):</span> <span>-${tienGiam.toLocaleString()}</span></div>
+                <div style="display:flex; justify-content:space-between;"><span>Khuyến mãi (${phanTramGiam}%):</span> <span>-${soTienGiam.toLocaleString()}</span></div>
                 <div class="line"></div>
                 <div style="display:flex; justify-content:space-between; font-size: 18px; font-weight:bold;">
                     <span>TỔNG CỘNG:</span> <span>${thanhToan.toLocaleString()} ₫</span>
                 </div>
                 <div class="line"></div>
-                <div class="center" style="margin-top: 20px;">Cảm ơn quý khách và hẹn gặp lại!</div>
+                <div class="center" style="margin-top: 20px; font-style: italic;">Cảm ơn quý khách và hẹn gặp lại!</div>
             </body>
             </html>
         `;
-
         printWindow.document.write(html);
         printWindow.document.close();
-        setTimeout(() => {
-            printWindow.print();
-            printWindow.close();
-        }, 500); // Đợi 0.5s để load giao diện xong mới bật hộp thoại in
+        setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
     }
 
     function chotThanhToan() {
         if(!confirm("Xác nhận đã thu tiền khách?")) return;
+        const soTienGiam = Math.round(tongTienGoc * (phanTramGiam / 100));
         const dataThanhToan = {
             maHD: maHoaDonHienTai, maBan: maBan, pttt: "Tiền mặt",
-            maKM: maKMHienTai, soTienGiam: tongTienGoc * (phanTramGiam / 100)
+            maKM: maKMHienTai, soTienGiam: soTienGiam
         };
         fetch(`${API_BASE_URL}/hoadon/thanh-toan`, {
             method: 'PUT', headers: { 'Content-Type': 'application/json' },

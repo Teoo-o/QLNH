@@ -56,41 +56,59 @@ public class PhieuDatBanController {
         try {
             String tenKhach = payload.get("tenKhach");
             String sdt = payload.get("sdt");
-            String thoiGian = payload.get("thoiGian");
+            LocalDateTime thoiGianDat = LocalDateTime.parse(payload.get("thoiGian"));
             int soNguoi = Integer.parseInt(payload.get("soNguoi"));
             String maBan = payload.get("maBan");
 
-            KhachHang kh = new KhachHang();
-            kh.setMaKH("KH" + System.currentTimeMillis());
-            kh.setTenKH(tenKhach);
-            kh.setSdt(sdt);
-            khachHangRepository.save(kh);
+            if (maBan == null || maBan.isEmpty()) {
+                return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Vui lòng chọn bàn!"));
+            }
 
+            // 1. KIỂM TRA XUNG ĐỘT THỜI GIAN (Chặn +/- 2 tiếng)
+            LocalDateTime startCheck = thoiGianDat.minusHours(2);
+            LocalDateTime endCheck = thoiGianDat.plusHours(2);
+            List<PhieuDatBan> trungLich = phieuDatBanRepository.findConflictingBookings(maBan, startCheck, endCheck);
+
+            if (!trungLich.isEmpty()) {
+                return ResponseEntity.badRequest().body(Collections.singletonMap("message",
+                        "Bàn này đã có người đặt trong khoảng thời gian từ " +
+                                startCheck.toLocalTime() + " đến " + endCheck.toLocalTime() + ". Vui lòng chọn giờ khác hoặc bàn khác!"));
+            }
+
+            // 2. THUẬT TOÁN FIND-OR-CREATE KHACH HANG
+            KhachHang kh = khachHangRepository.findBySdt(sdt).orElseGet(() -> {
+                KhachHang khachMoi = new KhachHang();
+                khachMoi.setMaKH("KH" + System.currentTimeMillis());
+                khachMoi.setTenKH(tenKhach);
+                khachMoi.setSdt(sdt);
+                return khachHangRepository.save(khachMoi);
+            });
+
+            // 3. TẠO PHIẾU ĐẶT BÀN
             PhieuDatBan pd = new PhieuDatBan();
             pd.setMaPhieu("PD" + System.currentTimeMillis());
             pd.setKhachHang(kh);
-            pd.setThoiGian(LocalDateTime.parse(thoiGian));
+            pd.setThoiGian(thoiGianDat);
             pd.setSoNguoi(soNguoi);
             pd.setTrangThai("Chờ nhận bàn");
 
-            if (maBan != null && !maBan.isEmpty()) {
-                BanAn ban = banAnRepository.findById(maBan).orElse(null);
-                if (ban != null) {
-                    if (soNguoi > ban.getSoGhe()) {
-                        return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Số người (" + soNguoi + ") vượt quá sức chứa!"));
-                    }
-                    pd.setBanAn(ban);
+            BanAn ban = banAnRepository.findById(maBan).orElse(null);
+            if (ban != null) {
+                if (soNguoi > ban.getSoGhe()) {
+                    return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Bàn này chỉ chứa được " + ban.getSoGhe() + " người!"));
+                }
+                pd.setBanAn(ban);
 
-                    if (pd.getThoiGian().isBefore(LocalDateTime.now().plusHours(2))) {
-                        if ("Trống".equals(ban.getStatus()) || ban.getStatus() == null) {
-                            ban.setStatus("Đã đặt");
-                            banAnRepository.save(ban);
-                        }
-                    }
+                // Nếu đặt bàn trong vòng 2 tiếng tới, cập nhật trạng thái bàn sang 'Đã đặt' ngay
+                if (thoiGianDat.isBefore(LocalDateTime.now().plusHours(2))) {
+                    ban.setStatus("Đã đặt");
+                    banAnRepository.save(ban);
                 }
             }
+
             phieuDatBanRepository.save(pd);
             return ResponseEntity.ok(Collections.singletonMap("message", "Tạo phiếu đặt bàn thành công!"));
+
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Lỗi: " + e.getMessage()));
         }
@@ -101,30 +119,24 @@ public class PhieuDatBanController {
     public ResponseEntity<?> khachNhanBan(@PathVariable String maPhieu) {
         return phieuDatBanRepository.findById(maPhieu).map(phieu -> {
             LocalDateTime now = LocalDateTime.now();
-
-            if (now.isBefore(phieu.getThoiGian())) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Chưa đến giờ hẹn! Không thể nhận bàn."));
+            if (now.isBefore(phieu.getThoiGian().minusMinutes(30))) {
+                return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Còn quá sớm! Quý khách vui lòng đợi thêm."));
             }
             if (now.isAfter(phieu.getThoiGian().plusMinutes(15))) {
-                return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Phiếu đã lố 15 phút và bị vô hiệu hóa!"));
+                return ResponseEntity.badRequest().body(Collections.singletonMap("message", "Quá 15 phút hẹn! Phiếu đã bị hủy tự động."));
             }
 
             phieu.setTrangThai("Đã nhận bàn");
             phieuDatBanRepository.save(phieu);
 
-            String maBan = "";
             if (phieu.getBanAn() != null) {
                 BanAn ban = phieu.getBanAn();
                 ban.setStatus("Có khách");
                 banAnRepository.save(ban);
-                maBan = ban.getMaBan();
             }
 
-            Map<String, String> response = new HashMap<>();
-            response.put("message", "Nhận bàn thành công!");
-            response.put("maBan", maBan);
-            return ResponseEntity.ok(response);
-        }).orElse(ResponseEntity.badRequest().body(Collections.singletonMap("message", "Không tìm thấy phiếu đặt bàn này!")));
+            return ResponseEntity.ok(Collections.singletonMap("message", "Nhận bàn thành công!"));
+        }).orElse(ResponseEntity.badRequest().body(Collections.singletonMap("message", "Không tìm thấy phiếu!")));
     }
 
     @PutMapping("/huy/{maPhieu}")
@@ -139,8 +151,7 @@ public class PhieuDatBanController {
                 ban.setStatus("Trống");
                 banAnRepository.save(ban);
             }
-
             return ResponseEntity.ok(Collections.singletonMap("message", "Đã hủy phiếu đặt bàn!"));
-        }).orElse(ResponseEntity.badRequest().body(Collections.singletonMap("message", "Không tìm thấy phiếu đặt bàn này!")));
+        }).orElse(ResponseEntity.badRequest().body(Collections.singletonMap("message", "Lỗi!")));
     }
 }

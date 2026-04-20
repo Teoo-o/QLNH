@@ -128,7 +128,8 @@ public class HoaDonController {
             String pttt = (String) payload.get("pttt");
 
             String maKM = (String) payload.get("maKM");
-            Double soTienGiam = payload.get("soTienGiam") != null ? Double.parseDouble(payload.get("soTienGiam").toString()) : 0.0;
+            Double rawSoTienGiam = payload.get("soTienGiam") != null ? Double.parseDouble(payload.get("soTienGiam").toString()) : 0.0;
+            Double soTienGiam = (double) Math.round(rawSoTienGiam);
 
             HoaDon hd = hoaDonRepository.findById(maHD)
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy hóa đơn"));
@@ -159,7 +160,8 @@ public class HoaDonController {
                     NguyenLieu kho = nguyenLieuRepository.findById(maNL).orElse(null);
                     if (kho != null) {
                         double tongTieuHao = dinhLuong * soLuongMonBanRa;
-                        kho.setSl(kho.getSl() - tongTieuHao);
+                        double slMoi = kho.getSl() - tongTieuHao;
+                        kho.setSl(Math.round(slMoi * 100.0) / 100.0);
                         nguyenLieuRepository.save(kho);
                     }
                 }

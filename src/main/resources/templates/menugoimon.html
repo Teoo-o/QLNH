@@ -13,12 +13,22 @@
 
         /* Cột Menu */
         .menu-section { flex: 2; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 15px; display: flex; flex-direction: column;}
+
+        .category-tabs { display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px;}
+        .tab-btn { padding: 8px 15px; border: none; background: #ecf0f1; color: #34495e; font-weight: bold; border-radius: 20px; cursor: pointer; transition: 0.2s; white-space: nowrap;}
+        .tab-btn.active { background: #e67e22; color: white; }
+
         .search-bar { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #bdc3c7; border-radius: 5px; margin-bottom: 15px; box-sizing: border-box;}
 
         .grid-monan { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; overflow-y: auto; padding-right: 5px;}
-        .mon-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; background: #fff;}
+        .mon-card { border: 1px solid #e0e0e0; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; transition: 0.2s; background: #fff; position: relative;}
         .mon-card:hover { border-color: #3498db; box-shadow: 0 4px 8px rgba(52, 152, 219, 0.2); transform: translateY(-2px);}
-        .mon-img { width: 100%; height: 100px; background-color: #ecf0f1; border-radius: 4px; margin-bottom: 8px; object-fit: cover;}
+
+        /* Chống lỗi ảnh trắng xóa */
+        .img-container { width: 100%; height: 100px; background-color: #ecf0f1; border-radius: 4px; margin-bottom: 8px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;}
+        .img-fallback { position: absolute; font-size: 40px; color: #bdc3c7; z-index: 1;}
+        .mon-img { width: 100%; height: 100%; object-fit: cover; z-index: 2; position: absolute; top: 0; left: 0;}
+
         .mon-ten { font-weight: bold; color: #2c3e50; font-size: 14px; margin-bottom: 5px;}
         .mon-gia { color: #e74c3c; font-weight: bold;}
 
@@ -46,7 +56,11 @@
 
 <div class="container">
     <div class="menu-section">
-        <input type="text" id="timKiem" class="search-bar" placeholder="🔍 Tìm kiếm món ăn..." onkeyup="locMonAn()">
+        <div class="category-tabs" id="tabContainer">
+            <button class="tab-btn active" onclick="locMonAnTab('All', this)">Tất Cả</button>
+        </div>
+
+        <input type="text" id="timKiem" class="search-bar" placeholder="🔍 Tìm kiếm nhanh..." onkeyup="locMonAn()">
         <div class="grid-monan" id="danhSachMon">
             <p style="text-align: center; width: 100%; color: #7f8c8d;">Đang tải thực đơn...</p>
         </div>
@@ -54,12 +68,8 @@
 
     <div class="cart-section">
         <div class="cart-title">🛒 Phiếu Gọi Món</div>
-        <div class="cart-list" id="gioHang">
-        </div>
-
-        <div class="cart-total">
-            Tổng cộng: <br><span id="tongTien">0</span> ₫
-        </div>
+        <div class="cart-list" id="gioHang"></div>
+        <div class="cart-total">Tổng cộng: <br><span id="tongTien">0</span> ₫</div>
         <button class="btn-order" id="btnChotOrder" disabled onclick="guiOrderXuongBep()">🔥 CHỐT MÓN & GỬI BẾP</button>
     </div>
 </div>
@@ -70,6 +80,17 @@
     let thucDonToanBo = [];
     let gioHang = [];
 
+    // Hàm sắp xếp ưu tiên
+    function getTrongSo(tenDM) {
+        if(!tenDM) return 5;
+        let t = tenDM.toLowerCase();
+        if(t.includes('khai')) return 1;
+        if(t.includes('bún') || t.includes('phở') || t.includes('bun') || t.includes('pho')) return 2;
+        if(t.includes('cơm') || t.includes('com')) return 3;
+        if(t.includes('uống') || t.includes('tráng') || t.includes('uong')) return 4;
+        return 5;
+    }
+
     window.onload = function() {
         if(!maBanDangChon) {
             alert("Vui lòng chọn bàn từ sơ đồ trước khi gọi món!");
@@ -77,36 +98,63 @@
             return;
         }
         document.getElementById('tenBanHienThi').innerText = `BÀN ${maBanDangChon}`;
+        taiDanhSachTabs();
         taiThucDon();
     };
 
+    function taiDanhSachTabs() {
+        fetch(`${API_BASE_URL}/danhmuc`).then(res => res.json()).then(data => {
+            const tabs = document.getElementById('tabContainer');
+            data.sort((a, b) => getTrongSo(a.tenDM) - getTrongSo(b.tenDM));
+            data.forEach(dm => {
+                tabs.innerHTML += `<button class="tab-btn" onclick="locMonAnTab('${dm.tenDM}', this)">${dm.tenDM}</button>`;
+            });
+        });
+    }
+
     function taiThucDon() {
-        // Giả định bạn đã có MonAnController với API GET /api/monan
         fetch(`${API_BASE_URL}/monan`)
             .then(res => res.json())
             .then(data => {
+                data.sort((a, b) => {
+                    let dmA = a.danhMuc ? a.danhMuc.tenDM : 'Khác';
+                    let dmB = b.danhMuc ? b.danhMuc.tenDM : 'Khác';
+                    return getTrongSo(dmA) - getTrongSo(dmB);
+                });
                 thucDonToanBo = data;
                 hienThiMonAn(thucDonToanBo);
             })
-            .catch(err => alert("Lỗi tải thực đơn. Hãy đảm bảo MonAnController đã chạy!"));
+            .catch(err => alert("Lỗi tải thực đơn."));
     }
 
     function hienThiMonAn(danhSach) {
         const grid = document.getElementById('danhSachMon');
         grid.innerHTML = '';
-        danhSach.forEach(mon => {
+        if(danhSach.length === 0) { grid.innerHTML = '<p style="text-align: center; width: 100%;">Trống!</p>'; return; }
 
-            // THÊM DẤU CHẤM VÀO TRƯỚC ĐỂ BIẾN THÀNH: ./images/m01.jpg
-            let linkAnh = mon.hinhAnh ? "." + mon.hinhAnh : 'https://via.placeholder.com/150?text=Chua+Co+Anh';
+        danhSach.forEach(mon => {
+            // SỬA LỖI ẢNH: Bỏ dấu "." ở đầu, dùng onerror để ẩn ảnh hỏng đi, lộ ra icon 🍲
+            let linkAnh = mon.hinhAnh ? mon.hinhAnh : '';
+            const imgHTML = linkAnh ? `<img src="${linkAnh}" class="mon-img" alt="${mon.tenMon}" onerror="this.style.display='none';">` : '';
 
             grid.innerHTML += `
                 <div class="mon-card" onclick="themVaoGio('${mon.maMon}', '${mon.tenMon}', ${mon.donGia})">
-                    <img src="${linkAnh}" class="mon-img" alt="${mon.tenMon}" onerror="this.src='https://via.placeholder.com/150?text=Loi+Anh'">
+                    <div class="img-container">
+                        <div class="img-fallback">🍲</div>
+                        ${imgHTML}
+                    </div>
                     <div class="mon-ten">${mon.tenMon}</div>
                     <div class="mon-gia">${mon.donGia.toLocaleString('vi-VN')} ₫</div>
                 </div>
             `;
         });
+    }
+
+    function locMonAnTab(tenDM, elementClicked) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        elementClicked.classList.add('active');
+        if(tenDM === 'All') hienThiMonAn(thucDonToanBo);
+        else hienThiMonAn(thucDonToanBo.filter(mon => mon.danhMuc && mon.danhMuc.tenDM === tenDM));
     }
 
     function locMonAn() {
@@ -115,13 +163,10 @@
         hienThiMonAn(ketQua);
     }
 
+    // --- LOGIC GIỎ HÀNG CŨ CỦA BẠN (GIỮ NGUYÊN) ---
     function themVaoGio(maMon, tenMon, donGia) {
         const monDaCo = gioHang.find(item => item.maMon === maMon);
-        if(monDaCo) {
-            monDaCo.soLuong += 1;
-        } else {
-            gioHang.push({ maMon, tenMon, donGia, soLuong: 1 });
-        }
+        if(monDaCo) { monDaCo.soLuong += 1; } else { gioHang.push({ maMon, tenMon, donGia, soLuong: 1 }); }
         renderGioHang();
     }
 
@@ -129,9 +174,7 @@
         const mon = gioHang.find(item => item.maMon === maMon);
         if(mon) {
             mon.soLuong += soLuongThem;
-            if(mon.soLuong <= 0) {
-                gioHang = gioHang.filter(item => item.maMon !== maMon);
-            }
+            if(mon.soLuong <= 0) { gioHang = gioHang.filter(item => item.maMon !== maMon); }
         }
         renderGioHang();
     }
@@ -165,29 +208,18 @@
 
     function guiOrderXuongBep() {
         if(gioHang.length === 0) return;
-
-        // Chuẩn bị cục Data để gửi lên API tao-moi
         const payload = {
             maBan: maBanDangChon,
-            chiTietList: gioHang.map(item => ({
-                maMon: item.maMon,
-                soLuong: item.soLuong,
-                dongGia: item.donGia
-            }))
+            chiTietList: gioHang.map(item => ({ maMon: item.maMon, soLuong: item.soLuong, dongGia: item.donGia }))
         };
 
         fetch(`${API_BASE_URL}/hoadon/tao-moi`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
         })
             .then(async res => {
-                if(!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text);
-                }
+                if(!res.ok) { const text = await res.text(); throw new Error(text); }
                 alert("✅ Đã chốt Order thành công! Bàn đã chuyển sang trạng thái Có Khách.");
-                window.location.href = "quanlyban.html"; // Quay về sơ đồ
+                window.location.href = "quanlyban.html";
             })
             .catch(err => alert("❌ Lỗi tạo Order: " + err.message));
     }
